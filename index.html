@@ -37,7 +37,7 @@
     #msg { text-align: center; font-weight: bold; margin-top: 8px; min-height: 24px; font-size: 14px; }
   </style>
 </head>
-<body onclick="enableAudioOnUserInteraction()">
+<body>
 
 <div class="app-card">
   <div class="top-bar">
@@ -84,7 +84,6 @@
   let userCard = [];
   let selectedIndices = new Set([12]); // FREE space
   let previousLastNumber = null;
-  let audioUnlocked = false;
 
   // 1-75 ሰሌዳ መፍጠር
   const fullBoardEl = document.getElementById('full-board');
@@ -93,15 +92,6 @@
     d.id = `board-num-${i}`;
     d.innerText = i;
     fullBoardEl.appendChild(d);
-  }
-
-  // ተጫዋቹ ስክሪኑን ሲነካ ድምፅ እንዲከፈት ማድረግ
-  function enableAudioOnUserInteraction() {
-    if (!audioUnlocked && 'speechSynthesis' in window) {
-      let silentUtterance = new SpeechSynthesisUtterance('');
-      window.speechSynthesis.speak(silentUtterance);
-      audioUnlocked = true;
-    }
   }
 
   // ቁጥርን ወደ አማርኛ ጽሑፍ የሚቀይር ተግባር
@@ -118,28 +108,25 @@
     return u === 0 ? tens[t] : tens[t] + " " + units[u];
   }
 
-  // በአማርኛ በድምፅ የመጥሪያ ተግባር (Web Speech API)
+  // ከGoogle Audio በቀጥታ በጥራት በአማርኛ የመጥሪያ ተግባር
   function speakNumber(num) {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+    let letter = '';
+    if (num >= 1 && num <= 15) letter = 'ቢ';
+    else if (num >= 16 && num <= 30) letter = 'አይ';
+    else if (num >= 31 && num <= 45) letter = 'ኤን';
+    else if (num >= 46 && num <= 60) letter = 'ጂ';
+    else if (num >= 61 && num <= 75) letter = 'ኦ';
 
-      let letter = '';
-      if (num >= 1 && num <= 15) letter = 'ቢ';
-      else if (num >= 16 && num <= 30) letter = 'አይ';
-      else if (num >= 31 && num <= 45) letter = 'ኤን';
-      else if (num >= 46 && num <= 60) letter = 'ጂ';
-      else if (num >= 61 && num <= 75) letter = 'ኦ';
-
-      const amharicNum = getAmharicText(num);
-      const textToSpeak = `${letter} ${amharicNum}`;
-      
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'am-ET';
-      utterance.rate = 0.85;
-      utterance.pitch = 1.0;
-      
-      window.speechSynthesis.speak(utterance);
-    }
+    const amharicNum = getAmharicText(num);
+    const textToSpeak = `${letter} ${amharicNum}`;
+    const text = encodeURIComponent(textToSpeak);
+    
+    const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${text}&tl=am&client=tw-ob`;
+    const audio = new Audio(audioUrl);
+    
+    audio.play().catch(e => {
+      console.log("Audio play blocked (user needs to interact with page first):", e);
+    });
   }
 
   // Firebase Realtime Listener
@@ -164,7 +151,7 @@
       let last = calledNumbers[calledNumbers.length - 1];
       document.getElementById('last-num').innerText = last !== undefined ? last : '-';
 
-      // አዲስ ቁጥር ሲጠራ ድምፅ ማውጣት
+      // አዲስ ቁጥር ሲጠራ በአማርኛ ድምፅ ማውጣት
       if (last !== undefined && last !== previousLastNumber) {
         speakNumber(last);
         previousLastNumber = last;
