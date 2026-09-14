@@ -7,7 +7,8 @@
   
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-<script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE_KEY"></script>
+  <script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE_KEY"></script>
+
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #7b73c2; margin: 0; padding: 10px; display: flex; justify-content: center; }
@@ -49,7 +50,6 @@
 
   <div class="sound-notice" id="sound-btn">🔊 ድምፅ እንዲሰራ ስክሪኑን አንድ ጊዜ ንካው</div>
 
-  <!-- የይለፍ እና የተጠሩ ቁጥሮች ሰሌዳ -->
   <div class="board-container">
     <div class="called-board" id="full-board"></div>
     <div class="current-call-box">
@@ -58,12 +58,10 @@
     </div>
   </div>
 
-  <!-- የቢንጎ ካርድ Header -->
   <div class="bingo-header">
     <div class="b-b">B</div><div class="b-i">I</div><div class="b-n">N</div><div class="b-g">G</div><div class="b-o">O</div>
   </div>
 
-  <!-- ተጫዋች ካርድ (5x5) -->
   <div class="player-card" id="card-grid"></div>
 
   <button class="btn-claim" onclick="claimBingo()">BINGO!</button>
@@ -86,23 +84,21 @@
 
   let calledNumbers = [];
   let userCard = [];
-  let selectedIndices = new Set([12]); // FREE space
+  let selectedIndices = new Set([12]);
   let previousLastNumber = null;
   let audioContextUnlocked = false;
 
-  // ብራውዘሩ ድምፅ እንዲያጫውት መክፈቻ
   function unlockAudio() {
     if (!audioContextUnlocked) {
-      const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-      silentAudio.play().then(() => {
-        audioContextUnlocked = true;
-        const btn = document.getElementById('sound-btn');
-        if (btn) btn.innerText = "🔊 ድምፅ ተከፍቷል";
-      }).catch(e => console.log(e));
+      if (window.responsiveVoice) {
+        responsiveVoice.speak("", "Amharic Female");
+      }
+      audioContextUnlocked = true;
+      const btn = document.getElementById('sound-btn');
+      if (btn) btn.innerText = "🔊 ድምፅ ተከፍቷል";
     }
   }
 
-  // 1-75 ሰሌዳ መፍጠር
   const fullBoardEl = document.getElementById('full-board');
   for (let i = 1; i <= 75; i++) {
     let d = document.createElement('div');
@@ -111,7 +107,6 @@
     fullBoardEl.appendChild(d);
   }
 
-  // ቁጥርን ወደ አማርኛ ጽሑፍ የሚቀይር ተግባር
   function getAmharicText(num) {
     const units = ["", "አንድ", "ሁለት", "ሦስት", "አራት", "አምስት", "ስድስት", "ሰባት", "ስምንት", "ዘጠኝ"];
     const tens = ["", "አሥር", "ሃያ", "ሠላሳ", "አርባ", "ሃምሳ", "ስድሳ", "ሰባ", "ሰማንያ", "ዘጠና"];
@@ -125,8 +120,7 @@
     return u === 0 ? tens[t] : tens[t] + " " + units[u];
   }
 
-  // ከGoogle TTS በድምፅ የመጥሪያ ተግባር (አስተማማኝ አሰራር)
-function speakNumber(num) {
+  function speakNumber(num) {
     let letter = '';
     if (num >= 1 && num <= 15) letter = 'ቢ';
     else if (num >= 16 && num <= 30) letter = 'አይ';
@@ -141,9 +135,7 @@ function speakNumber(num) {
       responsiveVoice.speak(textToSpeak, "Amharic Female", {rate: 0.85});
     }
   }
-  }
 
-  // Firebase Realtime Listener
   db.ref('currentGame').on('value', snapshot => {
     const data = snapshot.val();
     if (!data) return;
@@ -179,7 +171,6 @@ function speakNumber(num) {
     }
   });
 
-  // ካርድ ማፍለቂያ
   function generateCard() {
     const ranges = [[1, 15], [16, 30], [31, 45], [46, 60], [61, 75]];
     let cols = [];
