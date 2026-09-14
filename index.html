@@ -37,7 +37,7 @@
     #msg { text-align: center; font-weight: bold; margin-top: 8px; min-height: 24px; font-size: 14px; }
   </style>
 </head>
-<body>
+<body onclick="enableAudioOnUserInteraction()">
 
 <div class="app-card">
   <div class="top-bar">
@@ -84,6 +84,7 @@
   let userCard = [];
   let selectedIndices = new Set([12]); // FREE space
   let previousLastNumber = null;
+  let audioUnlocked = false;
 
   // 1-75 ሰሌዳ መፍጠር
   const fullBoardEl = document.getElementById('full-board');
@@ -94,13 +95,13 @@
     fullBoardEl.appendChild(d);
   }
 
-// ድምፅ እንዲሰራ የተጫዋቹን ፈቃድ መውሰጃ
-  let audioContextAllowed = false;
-  
-  function enableAudio() {
-    audioContextAllowed = true;
-    const msg = document.getElementById('msg');
-    if (msg) msg.innerText = "🔊 ድምፅ ተከፍቷል!";
+  // ተጫዋቹ ስክሪኑን ሲነካ ድምፅ እንዲከፈት ማድረግ
+  function enableAudioOnUserInteraction() {
+    if (!audioUnlocked && 'speechSynthesis' in window) {
+      let silentUtterance = new SpeechSynthesisUtterance('');
+      window.speechSynthesis.speak(silentUtterance);
+      audioUnlocked = true;
+    }
   }
 
   // ቁጥርን ወደ አማርኛ ጽሑፍ የሚቀይር ተግባር
@@ -117,7 +118,7 @@
     return u === 0 ? tens[t] : tens[t] + " " + units[u];
   }
 
-  // በአማርኛ በድምፅ የመጥሪያ ተግባር
+  // በአማርኛ በድምፅ የመጥሪያ ተግባር (Web Speech API)
   function speakNumber(num) {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -135,30 +136,12 @@
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = 'am-ET';
       utterance.rate = 0.85;
-      
-      window.speechSynthesis.speak(utterance);
-    }
-  }
-      else if (num >= 61 && num <= 75) letter = 'ኦ';
-
-      const amharicNum = getAmharicText(num);
-      const textToSpeak = `${letter} ${amharicNum}`;
-      
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'am-ET';
-      utterance.rate = 0.8;
       utterance.pitch = 1.0;
       
       window.speechSynthesis.speak(utterance);
     }
   }
-    const textToSpeak = `${letter} ${amharicNum}`;
-    const text = encodeURIComponent(textToSpeak);
-    const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${text}&tl=am&client=tw-ob`;
-    
-    const audio = new Audio(audioUrl);
-    audio.play().catch(e => console.log("Audio autoplay blocked:", e));
-  }
+
   // Firebase Realtime Listener
   db.ref('currentGame').on('value', snapshot => {
     const data = snapshot.val();
@@ -172,14 +155,16 @@
       // የጠሩትን ሰሌዳው ላይ ማብራት
       for (let i = 1; i <= 75; i++) {
         let el = document.getElementById(`board-num-${i}`);
-        if (calledNumbers.includes(i)) el.classList.add('called');
-        else el.classList.remove('called');
+        if (el) {
+          if (calledNumbers.includes(i)) el.classList.add('called');
+          else el.classList.remove('called');
+        }
       }
 
       let last = calledNumbers[calledNumbers.length - 1];
       document.getElementById('last-num').innerText = last !== undefined ? last : '-';
 
-      // አዲስ ቁጥር ሲጠራ ብቻ በድምፅ እንዲናገር ማድረግ
+      // አዲስ ቁጥር ሲጠራ ድምፅ ማውጣት
       if (last !== undefined && last !== previousLastNumber) {
         speakNumber(last);
         previousLastNumber = last;
@@ -189,7 +174,8 @@
       previousLastNumber = null;
       document.getElementById('last-num').innerText = '-';
       for (let i = 1; i <= 75; i++) {
-        document.getElementById(`board-num-${i}`).classList.remove('called');
+        let el = document.getElementById(`board-num-${i}`);
+        if (el) el.classList.remove('called');
       }
     }
   });
@@ -219,6 +205,7 @@
 
   function renderCard() {
     const grid = document.getElementById('card-grid');
+    if (!grid) return;
     grid.innerHTML = '';
     userCard.forEach((num, index) => {
       const cell = document.createElement('div');
