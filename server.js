@@ -1,32 +1,53 @@
 const express = require('express');
-const path = require('path');
-const { Telegraf, Markup } = require('telegraf');
-
-const BOT_TOKEN = '8855187131:AAFYpT-F0N4wEyW...'; // የቦት ቶከንህ
-const bot = new Telegraf(BOT_TOKEN);
+const admin = require('firebase-admin');
 const app = express();
 
-const WEB_APP_URL = 'https://efoy-bingo.vercel.app';
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
 
-app.use(express.static(path.join(__dirname, '/')));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-bot.start((ctx) => {
-  ctx.reply(
-    'እንኳን ወደ እፎይ ቢንጎ (Efoy Bingo) በሰላም መጡ!',
-    Markup.inlineKeyboard([
-      [Markup.button.webApp('🎮 ጨዋታውን ጀምር', WEB_APP_URL)]
-    ])
-  );
-});
-
-function calculatePayout(totalStakes, houseEdgePercent = 20) {
-  const houseProfit = totalStakes * (houseEdgePercent / 100);
-  const prizePool = totalStakes - houseProfit;
-  return { houseProfit, prizePool };
+if (admin.apps.length === 0) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://efoy-bingo-default-rtdb.firebaseio.com"
+  });
 }
 
-module.exports = app;
+const db = admin.database();
+let timer = null;
+let availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+
+function startGameLoop(gameId) {
+  if (timer) clearInterval(timer);
+
+  timer = setInterval(async () => {
+    if (availableNumbers.length === 0) {
+      clearInterval(timer);
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+    const nextCall = availableNumbers.splice(randomIndex, 1)[0];
+
+    const gameRef = db.ref(`games/${gameId}`);
+    const snapshot = await gameRef.once('value');
+    const gameData = snapshot.val() || {};
+    const calledNumbers = gameData.calledNumbers || [];
+    calledNumbers.push(nextCall);
+
+    await gameRef.update({
+      currentCall: nextCall,
+      calledNumbers: calledNumbers,
+      status: "PLAYING"
+    });
+  }, 4000);
+}
+
+app.get('/', (req, res) => res.send('Efoy Bingo Server Running!'));
+
+app.get('/start-game', (req, res) => {
+  availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+  startGameLoop('game_PS9731');
+  res.send('Game Started!');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
