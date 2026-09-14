@@ -5,35 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>እፎይ ቢንጎ - Admin Panel</title>
   
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
   <style>
-    body { font-family: sans-serif; background: #1a1a2e; color: #fff; padding: 20px; text-align: center; }
-    .card { background: #16213e; padding: 20px; border-radius: 12px; max-width: 400px; margin: 0 auto; }
-    button { padding: 12px 20px; font-size: 16px; font-weight: bold; margin: 8px; border: none; border-radius: 8px; cursor: pointer; }
-    .btn-call { background: #e94560; color: white; width: 80%; font-size: 20px; }
-    .btn-reset { background: #0f3460; color: white; }
-    .btn-start { background: #4ecca3; color: white; }
-    .display-box { font-size: 32px; font-weight: bold; margin: 15px 0; color: #4ecca3; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #1e1b4b; color: white; margin: 0; padding: 15px; display: flex; justify-content: center; }
+    .admin-card { background: #312e81; width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    
+    h1 { text-align: center; margin-top: 0; color: #facc15; font-size: 22px; }
+    
+    .status-box { background: #4338ca; padding: 10px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; }
+    
+    .current-call { background: #eab308; color: #000; font-size: 32px; font-weight: bold; text-align: center; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+    
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    button { border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+    button:active { transform: scale(0.96); }
+    
+    .btn-call { background: #22c55e; color: white; grid-column: span 2; font-size: 18px; padding: 15px; }
+    .btn-auto { background: #3b82f6; color: white; }
+    .btn-stop { background: #f97316; color: white; }
+    .btn-reset { background: #ef4444; color: white; grid-column: span 2; margin-top: 5px; }
+    
+    .speed-control { display: flex; align-items: center; justify-content: space-between; background: #3730a3; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+    select { background: #1e1b4b; color: white; border: 1px solid #6366f1; padding: 6px; border-radius: 6px; font-size: 14px; }
+
+    .board-title { font-size: 14px; margin-bottom: 8px; color: #cbd5e1; }
+    .admin-board { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; font-size: 11px; font-weight: bold; text-align: center; }
+    .admin-board div { background: rgba(255,255,255,0.1); padding: 6px 0; border-radius: 4px; }
+    .admin-board div.called { background: #22c55e; color: white; box-shadow: 0 0 5px #22c55e; }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <h2>እፎይ ቢንጎ - መቆጣጠሪያ (Admin)</h2>
-  
-  <div>የጨዋታ ሁኔታ: <strong id="status-display">WAIT</strong></div>
-  
-  <div class="display-box">
-    የመጨረሻው ቁጥር: <span id="last-num">-</span>
+<div class="admin-card">
+  <h1>🎮 Efoy Bingo - Admin</h1>
+
+  <div class="status-box">
+    <span>Status: <strong id="admin-status">WAIT</strong></span>
+    <span>Count: <strong id="called-count">0</strong>/75</span>
   </div>
 
-  <button class="btn-start" onclick="setGameStatus('PLAYING')">ጨዋታ ጀምር (PLAYING)</button>
-  <button class="btn-call" onclick="callRandomNumber()">🎲 ቁጥር ጦር (Call Number)</button>
-  <br>
-  <button class="btn-reset" onclick="resetGameData()">🔄 ጨዋታውን አዲስ አድርግ (Reset)</button>
+  <div class="current-call" id="last-called-number">Current: -</div>
+
+  <div class="speed-control">
+    <label for="interval-select">Auto Call Speed:</label>
+    <select id="interval-select">
+      <option value="3">3 Seconds</option>
+      <option value="5" selected>5 Seconds</option>
+      <option value="8">8 Seconds</option>
+    </select>
+  </div>
+
+  <div class="controls">
+    <button class="btn-call" onclick="callNextNumber()">🎲 Call Next Number</button>
+    <button class="btn-auto" id="auto-btn" onclick="toggleAutoCall()">▶ Start Auto Call</button>
+    <button class="btn-stop" onclick="stopAutoCall()">⏸ Pause Auto</button>
+    <button class="btn-reset" onclick="resetGame()">🔄 Reset Game</button>
+  </div>
+
+  <div class="board-title">Called Numbers (1-75):</div>
+  <div class="admin-board" id="admin-full-board"></div>
 </div>
 
 <script>
@@ -51,47 +84,103 @@
   const db = firebase.database();
 
   let calledNumbers = [];
+  let autoCallTimer = null;
 
-  // ዳታቤዝ ማዳመጥ
+  // 1-75 ሰሌዳ መፍጠር
+  const boardEl = document.getElementById('admin-full-board');
+  for (let i = 1; i <= 75; i++) {
+    let d = document.createElement('div');
+    d.id = `admin-num-${i}`;
+    d.innerText = i;
+    boardEl.appendChild(d);
+  }
+
+  // Firebase Realtime Listener
   db.ref('currentGame').on('value', snapshot => {
     const data = snapshot.val();
     if (!data) return;
-    
-    if (data.status) document.getElementById('status-display').innerText = data.status;
-    
+
+    if (data.status) document.getElementById('admin-status').innerText = data.status;
+
     if (data.calledNumbers) {
       calledNumbers = Array.isArray(data.calledNumbers) ? data.calledNumbers : Object.values(data.calledNumbers);
+      
+      document.getElementById('called-count').innerText = calledNumbers.length;
+
+      for (let i = 1; i <= 75; i++) {
+        let el = document.getElementById(`admin-num-${i}`);
+        if (el) {
+          if (calledNumbers.includes(i)) el.classList.add('called');
+          else el.classList.remove('called');
+        }
+      }
+
       let last = calledNumbers[calledNumbers.length - 1];
-      document.getElementById('last-num').innerText = last !== undefined ? last : '-';
+      document.getElementById('last-called-number').innerText = last !== undefined ? `Current: ${last}` : 'Current: -';
     } else {
       calledNumbers = [];
-      document.getElementById('last-num').innerText = '-';
+      document.getElementById('called-count').innerText = '0';
+      document.getElementById('last-called-number').innerText = 'Current: -';
+      for (let i = 1; i <= 75; i++) {
+        let el = document.getElementById(`admin-num-${i}`);
+        if (el) el.classList.remove('called');
+      }
     }
   });
 
-  function setGameStatus(status) {
-    db.ref('currentGame/status').set(status);
-  }
-
-  function callRandomNumber() {
+  // ቀጣይ ቁጥር መጥሪያ
+  function callNextNumber() {
     if (calledNumbers.length >= 75) {
-      alert("ሁሉም ቁጥሮች ተጠርተዋል!");
+      stopAutoCall();
+      alert("ሁሉም 75 ቁጥሮች ተጠርተዋል!");
       return;
     }
-    let rand;
-    do {
-      rand = Math.floor(Math.random() * 75) + 1;
-    } while (calledNumbers.includes(rand));
 
-    calledNumbers.push(rand);
-    db.ref('currentGame/calledNumbers').set(calledNumbers);
+    let uncalled = [];
+    for (let i = 1; i <= 75; i++) {
+      if (!calledNumbers.includes(i)) uncalled.push(i);
+    }
+
+    let randomIndex = Math.floor(Math.random() * uncalled.length);
+    let nextNum = uncalled[randomIndex];
+
+    calledNumbers.push(nextNum);
+
+    db.ref('currentGame').update({
+      calledNumbers: calledNumbers,
+      status: 'PLAYING'
+    });
   }
 
-  function resetGameData() {
-    if (confirm("እርግጠኛ ነህ ጨዋታውን መመለስ ትፈልጋለህ?")) {
+  // Auto Call ጅምር / እገዳ
+  function toggleAutoCall() {
+    if (autoCallTimer) {
+      stopAutoCall();
+    } else {
+      let speedSec = parseInt(document.getElementById('interval-select').value) * 1000;
+      callNextNumber();
+      autoCallTimer = setInterval(callNextNumber, speedSec);
+      document.getElementById('auto-btn').innerText = "⏸ Auto Running...";
+      document.getElementById('auto-btn').style.background = "#eab308";
+    }
+  }
+
+  function stopAutoCall() {
+    if (autoCallTimer) {
+      clearInterval(autoCallTimer);
+      autoCallTimer = null;
+      document.getElementById('auto-btn').innerText = "▶ Start Auto Call";
+      document.getElementById('auto-btn').style.background = "#3b82f6";
+    }
+  }
+
+  // ጨዋታን እንደ አዲስ መደገስ (Reset)
+  function resetGame() {
+    if (confirm("እርግጠኛ ነህ አዲስ ጨዋታ መጀመር ትፈልጋለህ? የቀደሙ ቁጥሮች ይጸዳሉ።")) {
+      stopAutoCall();
       db.ref('currentGame').set({
-        status: 'WAIT',
-        calledNumbers: []
+        calledNumbers: [],
+        status: 'WAIT'
       });
     }
   }
