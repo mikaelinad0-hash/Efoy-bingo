@@ -273,33 +273,44 @@
     loadCardByNumber(randomNum);
   }
 
-  // --- FIREBASE REALTIME LISTENERS ---
-  db.ref('currentGame/calledNumbers').on('value', snapshot => {
-   const data = snapshot.val();
+ // --- FIREBASE REALTIME LISTENERS ---
+db.ref('currentGame').on('value', snapshot => {
+  const data = snapshot.val();
   if (!data) return;
 
-  calledNumbers = Array.isArray(data) ? data : Object.values(data);
-  document.getElementById('call-cnt').innerText = calledNumbers.length;
-       
-      let lastNum = calledNumbers[calledNumbers.length - 1];
-      if (lastNum) {
-        let letter = lastNum <= 15 ? 'B' : lastNum <= 30 ? 'I' : lastNum <= 45 ? 'N' : lastNum <= 60 ? 'G' : 'O';
-        let bgColor = lastNum <= 15 ? '#ff9800' : lastNum <= 30 ? '#4caf50' : lastNum <= 45 ? '#2196f3' : lastNum <= 60 ? '#f44336' : '#9c27b0';
-        
-        document.getElementById('current-call').innerText = letter + "-" + lastNum;
-        speakCall(letter + " " + lastNum);
-        
-        document.querySelectorAll('.m-cell.last-called').forEach(c => {
-          c.classList.remove('last-called');
-          c.classList.add('called');
-        });
-        const mCell = document.getElementById('m-' + lastNum);
-        if (mCell) mCell.classList.add('last-called');
-
-        updateRecentCalls(letter + lastNum, bgColor);
-      }
+  if (data.calledNumbers) {
+    if (Array.isArray(data.calledNumbers)) {
+      calledNumbers = data.calledNumbers;
+    } else if (typeof data.calledNumbers === 'object') {
+      calledNumbers = Object.values(data.calledNumbers);
     }
+  } else {
+    calledNumbers = [];
+  }
+
+  const callCntEl = document.getElementById('call-cnt');
+  if (callCntEl) callCntEl.innerText = calledNumbers.length;
+
+  document.querySelectorAll('.m-cell').forEach(c => c.classList.remove('called', 'last-called'));
+  calledNumbers.forEach(num => {
+    const mCell = document.getElementById('m-' + num);
+    if (mCell) mCell.classList.add('called');
   });
+
+  let lastNum = calledNumbers[calledNumbers.length - 1];
+  if (lastNum !== undefined && lastNum !== null) {
+    let letter = lastNum <= 15 ? 'B' : lastNum <= 30 ? 'I' : lastNum <= 45 ? 'N' : lastNum <= 60 ? 'G' : 'O';
+    
+    const currentCallEl = document.getElementById('current-call');
+    if (currentCallEl) currentCallEl.innerText = letter + "-" + lastNum;
+
+    const mCell = document.getElementById('m-' + lastNum);
+    if (mCell) {
+      mCell.classList.remove('called');
+      mCell.classList.add('last-called');
+    }
+  }
+});
 
   function joinGame() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
