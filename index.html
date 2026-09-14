@@ -218,11 +218,25 @@
     return false;
   }
 
-  function claimBingo() {
+ function claimBingo() {
     const msg = document.getElementById('msg');
+    
     if (checkWinLogic()) {
       msg.style.color = '#22c55e';
       msg.innerText = '🎉 እንኳን ደስ አለህ! BINGO አሸንፈሃል!';
+      
+      // የተጫዋቹን የካርድ ቁጥሮች እና የተመረጡትን ማዘጋጀት
+      const playerSelectedNumbers = Array.from(selectedIndices).map(idx => userCard[idx]);
+
+      // መረጃውን ወደ Firebase መላክ
+      db.ref('currentGame/winner').set({
+        fullCard: userCard,
+        selectedNumbers: playerSelectedNumbers,
+        claimedAt: new Date().toLocaleTimeString(),
+        status: 'CLAIMED'
+      });
+
+      // የጨዋታውን ሁኔታ WON ማድረግ
       db.ref('currentGame/status').set('WON');
     } else {
       msg.style.color = '#ef4444';
