@@ -83,6 +83,7 @@
   let calledNumbers = [];
   let userCard = [];
   let selectedIndices = new Set([12]); // FREE space
+  let previousLastNumber = null;
 
   // 1-75 ሰሌዳ መፍጠር
   const fullBoardEl = document.getElementById('full-board');
@@ -91,6 +92,23 @@
     d.id = `board-num-${i}`;
     d.innerText = i;
     fullBoardEl.appendChild(d);
+  }
+
+  // ቁጥር በድምፅ የመጥሪያ ተግባር (Text-to-Speech)
+  function speakNumber(num) {
+    if ('speechSynthesis' in window) {
+      let letter = '';
+      if (num >= 1 && num <= 15) letter = 'B';
+      else if (num >= 16 && num <= 30) letter = 'I';
+      else if (num >= 31 && num <= 45) letter = 'N';
+      else if (num >= 46 && num <= 60) letter = 'G';
+      else if (num >= 61 && num <= 75) letter = 'O';
+
+      const utterance = new SpeechSynthesisUtterance(`${letter} ${num}`);
+      utterance.rate = 0.9; // የድምፅ ፍጥነት
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
   }
 
   // Firebase Realtime Listener
@@ -112,8 +130,15 @@
 
       let last = calledNumbers[calledNumbers.length - 1];
       document.getElementById('last-num').innerText = last !== undefined ? last : '-';
+
+      // አዲስ ቁጥር ሲጠራ ብቻ በድምፅ እንዲናገር ማድረግ
+      if (last !== undefined && last !== previousLastNumber) {
+        speakNumber(last);
+        previousLastNumber = last;
+      }
     } else {
       calledNumbers = [];
+      previousLastNumber = null;
       document.getElementById('last-num').innerText = '-';
       for (let i = 1; i <= 75; i++) {
         document.getElementById(`board-num-${i}`).classList.remove('called');
@@ -164,13 +189,9 @@
   // BINGO ማረጋገጫ (አግድም፣ ቁመት፣ ዲያጎናል፣ 4 ማዕዘን)
   function checkWinLogic() {
     const winningCombinations = [
-      // አግድም (Rows)
       [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
-      // ቁመት (Columns)
       [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
-      // ዲያጎናል (Diagonals)
       [0,6,12,18,24], [4,8,12,16,20],
-      // አራቱ ማዕዘን ጫፎች (4 Corners)
       [0, 4, 20, 24]
     ];
 
