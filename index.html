@@ -3,60 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>እፎይ ቢንጎ - Efoy Bingo</title>
+  <title>እፎይ ቢንጎ</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #1a1a2e; color: #fff; margin: 0; padding: 10px; }
-    .container { max-width: 400px; margin: 0 auto; background: #16213e; padding: 15px; border-radius: 12px; }
-    h2 { color: #e94560; margin-bottom: 5px; }
-    .status-bar { background: #0f3460; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #7b73c2; margin: 0; padding: 10px; display: flex; justify-content: center; }
+    .app-card { background: #5c53a6; width: 100%; max-width: 420px; border-radius: 16px; padding: 12px; color: white; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
     
-    /* Bingo Card Grid */
-    .card-header { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; font-weight: bold; font-size: 18px; margin-bottom: 5px; }
-    .card-header div { background: #e94560; padding: 8px; border-radius: 5px; }
-    .card-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 15px; }
-    .cell { background: #0f3460; padding: 12px 0; border-radius: 5px; font-weight: bold; cursor: pointer; user-select: none; font-size: 16px; }
-    .cell.selected { background: #ff9800; color: #000; }
-    .cell.free { background: #4caf50; color: #fff; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; background: #4a428c; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; }
     
-    .btn-bingo { background: #e94560; color: white; border: none; padding: 12px 25px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; }
-    .btn-bingo:disabled { background: #555; cursor: not-allowed; }
-    #msg { margin-top: 10px; font-weight: bold; font-size: 16px; }
+    .board-container { display: flex; gap: 8px; background: #4e4693; padding: 8px; border-radius: 10px; margin-bottom: 12px; }
+    .called-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; flex: 2; font-size: 9px; font-weight: bold; text-align: center; }
+    .called-board div { background: rgba(255,255,255,0.15); padding: 2px 0; border-radius: 2px; }
+    .called-board div.called { background: #22c55e; color: white; }
+    
+    .current-call-box { flex: 1; background: #372e74; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px; }
+    .call-circle { background: #eab308; color: #000; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; margin-top: 4px; }
+
+    .bingo-header { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 6px; text-align: center; font-weight: 900; font-size: 20px; }
+    .bingo-header div { padding: 6px 0; border-radius: 6px; color: white; }
+    .b-b { background: #f97316; } .b-i { background: #22c55e; } .b-n { background: #06b6d4; } .b-g { background: #ef4444; } .b-o { background: #a855f7; }
+
+    .player-card { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+    .cell { background: #f8fafc; color: #1e293b; font-size: 18px; font-weight: bold; height: 52px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+    .cell.selected { background: #3b82f6; color: white; }
+    .cell.free { background: #ef4444; color: white; border-radius: 50%; font-size: 12px; }
+
+    .btn-claim { background: #ef4444; color: white; border: none; width: 100%; padding: 12px; font-size: 20px; font-weight: bold; border-radius: 10px; cursor: pointer; }
+    .btn-claim:active { transform: scale(0.98); }
+    #msg { text-align: center; font-weight: bold; margin-top: 8px; min-height: 24px; font-size: 14px; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>እፎይ ቢንጎ (Efoy Bingo)</h2>
-  <div class="status-bar">
-    ሁኔታ፦ <span id="game-status">ቆሟል</span> | የመጨረሻ ቁጥር፦ <span id="last-num">-</span>
+<div class="app-card">
+  <div class="top-bar">
+    <span>Efoy Bingo</span>
+    <span>Status: <strong id="game-status">WAIT</strong></span>
   </div>
 
-  <!-- BINGO Header -->
-  <div class="card-header">
-    <div>B</div><div>I</div><div>N</div><div>G</div><div>O</div>
+  <!-- የይለፍ እና የተጠሩ ቁጥሮች ሰሌዳ (Board) -->
+  <div class="board-container">
+    <div class="called-board" id="full-board"></div>
+    <div class="current-call-box">
+      <span style="font-size: 10px;">Current Call</span>
+      <div class="call-circle" id="last-num">-</div>
+    </div>
   </div>
 
-  <!-- Player Card Grid -->
-  <div class="card-grid" id="bingo-card"></div>
+  <!-- የቢንጎ ካርድ Header -->
+  <div class="bingo-header">
+    <div class="b-b">B</div><div class="b-i">I</div><div class="b-n">N</div><div class="b-g">G</div><div class="b-o">O</div>
+  </div>
 
-  <button class="btn-bingo" id="bingo-btn" onclick="claimBingo()">BINGO! 🎉</button>
+  <!-- ተጫዋች ካርድ (5x5) -->
+  <div class="player-card" id="card-grid"></div>
+
+  <button class="btn-claim" onclick="claimBingo()">BINGO!</button>
   <div id="msg"></div>
 </div>
 
 <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCjsg9hgwCr8HCtkeVScZPcKTby9TjrUtM",
+    authDomain: "efoy-bingo.firebaseapp.com",
+    databaseURL: "https://efoy-bingo-default-rtdb.firebaseio.com",
+    projectId: "efoy-bingo",
+    storageBucket: "efoy-bingo.firebasestorage.app",
+    messagingSenderId: "893878716636",
+    appId: "1:893878716636:web:7421f98ea5ff5f0e760c19"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
   let calledNumbers = [];
   let userCard = [];
-  let selectedIndices = new Set([12]); // 12 የመካከለኛው (FREE) index ነው
+  let selectedIndices = new Set([12]); // FREE space
 
-  // የካርድ ቁጥሮችን በዘፈቀደ ማፍለቂያ
+  // 1-75 ሰሌዳ መፍጠር
+  const fullBoardEl = document.getElementById('full-board');
+  for (let i = 1; i <= 75; i++) {
+    let d = document.createElement('div');
+    d.id = `board-num-${i}`;
+    d.innerText = i;
+    fullBoardEl.appendChild(d);
+  }
+
+  // Firebase Realtime Listener
+  db.ref('currentGame').on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    if (data.status) document.getElementById('game-status').innerText = data.status;
+
+    if (data.calledNumbers) {
+      calledNumbers = Array.isArray(data.calledNumbers) ? data.calledNumbers : Object.values(data.calledNumbers);
+      
+      // የጠሩትን ሰሌዳው ላይ ማብራት
+      for (let i = 1; i <= 75; i++) {
+        let el = document.getElementById(`board-num-${i}`);
+        if (calledNumbers.includes(i)) el.classList.add('called');
+        else el.classList.remove('called');
+      }
+
+      let last = calledNumbers[calledNumbers.length - 1];
+      document.getElementById('last-num').innerText = last !== undefined ? last : '-';
+    } else {
+      calledNumbers = [];
+      document.getElementById('last-num').innerText = '-';
+      for (let i = 1; i <= 75; i++) {
+        document.getElementById(`board-num-${i}`).classList.remove('called');
+      }
+    }
+  });
+
+  // ካርድ ማፍለቂያ
   function generateCard() {
-    const ranges = [
-      [1, 15],   // B
-      [16, 30],  // I
-      [31, 45],  // N
-      [46, 60],  // G
-      [61, 75]   // O
-    ];
+    const ranges = [[1, 15], [16, 30], [31, 45], [46, 60], [61, 75]];
     let cols = [];
     for (let i = 0; i < 5; i++) {
       let nums = [];
@@ -67,56 +134,34 @@
       cols.push(nums);
     }
 
-    // 5x5 Grid ማዘጋጀት
     userCard = [];
     for (let row = 0; row < 5; row++) {
       for (let col = 0; col < 5; col++) {
-        if (row === 2 && col === 2) {
-          userCard.push("FREE");
-        } else {
-          userCard.push(cols[col][row]);
-        }
+        if (row === 2 && col === 2) userCard.push("FREE");
+        else userCard.push(cols[col][row]);
       }
     }
     renderCard();
   }
 
-  // ካርዱን በማያ ገጽ ላይ ማሳየት
   function renderCard() {
-    const grid = document.getElementById('bingo-card');
+    const grid = document.getElementById('card-grid');
     grid.innerHTML = '';
     userCard.forEach((num, index) => {
       const cell = document.createElement('div');
       cell.className = 'cell' + (num === 'FREE' ? ' free selected' : '') + (selectedIndices.has(index) ? ' selected' : '');
-      cell.innerText = num;
-      cell.onclick = () => toggleSelect(index, num);
+      cell.innerText = num === 'FREE' ? '★' : num;
+      cell.onclick = () => {
+        if (num === 'FREE') return;
+        if (selectedIndices.has(index)) selectedIndices.delete(index);
+        else selectedIndices.add(index);
+        renderCard();
+      };
       grid.appendChild(cell);
     });
   }
 
-  // ቁጥር ሲነካ መምረጥ / አለመምረጥ
-  function toggleSelect(index, num) {
-    if (num === 'FREE') return;
-    if (selectedIndices.has(index)) {
-      selectedIndices.delete(index);
-    } else {
-      selectedIndices.add(index);
-    }
-    renderCard();
-  }
-
-  // የሰርቨር/አድሚን መረጃዎችን በየሴኮንዱ መቀበል
-  async function fetchGameState() {
-    try {
-      const res = await fetch('/api/game-state');
-      const data = await res.json();
-      calledNumbers = data.calledNumbers || [];
-      document.getElementById('game-status').innerText = data.status || 'WAITING';
-      document.getElementById('last-num').innerText = calledNumbers.length ? calledNumbers[calledNumbers.length - 1] : '-';
-    } catch (e) {}
-  }
-
-  // ቢንጎ ማረጋገጫ (አግድም፣ ቁመት፣ ዲያጎናል እና 4 ማዕዘን ጫፎች)
+  // BINGO ማረጋገጫ (አግድም፣ ቁመት፣ ዲያጎናል፣ 4 ማዕዘን)
   function checkWinLogic() {
     const winningCombinations = [
       // አግድም (Rows)
@@ -130,16 +175,12 @@
     ];
 
     for (let combo of winningCombinations) {
-      // 1. መስመሩ ሙሉ በሙሉ በተጫዋቹ ተመርጧል?
       let isComboSelected = combo.every(idx => selectedIndices.has(idx));
-      
       if (isComboSelected) {
-        // 2. የተመረጡት ቁጥሮች በእርግጥ በአድሚኑ ተጠርተዋል? (FREE ሲቀር)
         let allNumbersCalled = combo.every(idx => {
           let num = userCard[idx];
           return num === 'FREE' || calledNumbers.includes(num);
         });
-
         if (allNumbersCalled) return true;
       }
     }
@@ -149,17 +190,16 @@
   function claimBingo() {
     const msg = document.getElementById('msg');
     if (checkWinLogic()) {
-      msg.style.color = '#4caf50';
+      msg.style.color = '#22c55e';
       msg.innerText = '🎉 እንኳን ደስ አለህ! BINGO አሸንፈሃል!';
+      db.ref('currentGame/status').set('WON');
     } else {
-      msg.style.color = '#e94560';
-      msg.innerText = '❌ BINGO አልተሰራም! እባክህ የተጠሩትን ቁጥሮች በትክክል አረጋግጥ።';
+      msg.style.color = '#ef4444';
+      msg.innerText = '❌ BINGO አልተሰራም! የተጠሩትን ቁጥሮች ያረጋግጡ።';
     }
   }
 
   generateCard();
-  setInterval(fetchGameState, 1000);
 </script>
-
 </body>
 </html>
