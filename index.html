@@ -285,12 +285,19 @@ function toggleSound() {
 
       // የጨዋታውን ሁኔታ WON ማድረግ
       db.ref('currentGame/status').set('WON');
+      triggerConfetti();
     } else {
       msg.style.color = '#ef4444';
       msg.innerText = '❌ BINGO አልተሰራም! የተጠሩትን ቁጥሮች ያረጋግጡ።';
     }
   }
-
+function triggerConfetti() {
+  confetti({
+    particleCount: 120,
+    spread: 80,
+    origin: { y: 0.6 }
+  });
+}
   generateCard();
 </script>
 </body>
