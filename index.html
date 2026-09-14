@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>እፎይ ቢንጎ - Audio & Full Features</title>
+  <title>እፎይ ቢንጎ - Firebase Multiplayer</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- Firebase SDKs (v9 CDN Compatible) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #8c68cd; color: #fff; margin: 0; padding: 10px; display: flex; justify-content: center; }
@@ -16,7 +21,6 @@
 
     .main-layout { display: flex; gap: 8px; margin-bottom: 10px; }
     
-    /* Master Board (1-75) */
     .master-board-container { width: 44%; background: #a87be3; border-radius: 10px; padding: 6px; }
     .bingo-header-mini { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; text-align: center; font-weight: bold; font-size: 11px; margin-bottom: 4px; }
     .b-h { background: #ff9800; border-radius: 4px; color: #fff; }
@@ -40,7 +44,6 @@
     .recent-calls { background: #b184ed; border-radius: 10px; padding: 6px; display: flex; justify-content: center; gap: 6px; height: 36px; align-items: center; }
     .recent-ball { width: 26px; height: 26px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 9px; font-weight: bold; color: white; }
 
-    /* Player Card */
     .player-card { background: #a87be3; border-radius: 10px; padding: 8px; }
     .bingo-header { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 6px; }
     .card-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
@@ -67,7 +70,7 @@
     <div class="top-item">Game<br><span id="game-id">PS9731</span></div>
     <div class="top-item">Derash<br><span>686.4</span></div>
     <div class="top-item">Bonus<br><span>On</span></div>
-    <div class="top-item">Players<br><span id="players-cnt">88</span></div>
+    <div class="top-item">Players<br><span id="players-cnt">1</span></div>
     <div class="top-item">Stake<br><span>10</span></div>
     <div class="top-item">Call<br><span id="call-cnt">0</span></div>
     <div class="top-item sound-btn" onclick="toggleSound()">Sound<br><span id="sound-status">🔊 ON</span></div>
@@ -83,8 +86,8 @@
 
     <div class="right-panel">
       <div class="status-box">
-        <div class="status-title" id="status-label">Count Down</div>
-        <div class="status-value" id="timer-val">30</div>
+        <div class="status-title" id="status-label">Status</div>
+        <div class="status-value" id="timer-val">WAIT</div>
       </div>
       
       <div class="current-call-box">
@@ -110,7 +113,7 @@
 
   <button class="bingo-btn" onclick="claimBingo()">BINGO!</button>
   <div class="bottom-btns">
-    <button class="action-btn btn-start" onclick="joinAndStartTimer()">ተቀላቀል (10 ETB)</button>
+    <button class="action-btn btn-start" onclick="joinGame()">ተቀላቀል (10 ETB)</button>
     <button class="action-btn btn-refresh" onclick="randomBoard()">Refresh</button>
     <button class="action-btn btn-leave" onclick="resetGame()">Leave</button>
   </div>
@@ -120,22 +123,30 @@
   const tg = window.Telegram ? window.Telegram.WebApp : null;
   if (tg) tg.expand();
 
+  // --- FIREBASE INITIALIZATION ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCjsg9hgwCr8HCtkeVScZPcKTby9TjrUtM",
+    authDomain: "efoy-bingo.firebaseapp.com",
+    databaseURL: "https://efoy-bingo-default-rtdb.firebaseio.com",
+    projectId: "efoy-bingo",
+    storageBucket: "efoy-bingo.firebasestorage.app",
+    messagingSenderId: "893878716636",
+    appId: "1:893878716636:web:7421f98ea5ff5f0e760c19",
+    measurementId: "G-5FPZE60PCP"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
   let calledNumbers = [];
-  let gameInterval = null;
-  let countdownInterval = null;
-  let isGameStarted = false;
   let playerBoardState = [];
   let currentBoardNumber = 20;
   let isSoundOn = true;
-
-  // Web Audio Context for Sound Effects
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
   function playSound(type) {
     if (!isSoundOn) return;
-    
     if (type === 'win') {
-      // BINGO Win Sound (Fanfare Notes)
       let notes = [261.63, 329.63, 392.00, 523.25];
       notes.forEach((freq, idx) => {
         let osc = audioCtx.createOscillator();
@@ -150,7 +161,6 @@
         osc.stop(audioCtx.currentTime + idx * 0.12 + 0.3);
       });
     } else if (type === 'error') {
-      // Error Beep
       let osc = audioCtx.createOscillator();
       let gain = audioCtx.createGain();
       osc.type = 'sawtooth';
@@ -167,7 +177,7 @@
   function speakCall(text) {
     if (!isSoundOn) return;
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // ጸጥ ማድረጊያ
+      window.speechSynthesis.cancel();
       let utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
       utterance.rate = 0.9;
@@ -213,16 +223,15 @@
     }
 
     return [
-      getColumnNums(1, 15),   // B
-      getColumnNums(16, 30),  // I
-      getColumnNums(31, 45),  // N
-      getColumnNums(46, 60),  // G
-      getColumnNums(61, 75)   // O
+      getColumnNums(1, 15),
+      getColumnNums(16, 30),
+      getColumnNums(31, 45),
+      getColumnNums(46, 60),
+      getColumnNums(61, 75)
     ];
   }
 
   function loadCardByNumber(boardNum) {
-    if (isGameStarted) return;
     currentBoardNumber = parseInt(boardNum) || 1;
     document.getElementById('board-id-input').value = currentBoardNumber;
 
@@ -244,7 +253,6 @@
           let val = columns[col][row];
           cell.innerText = val;
           cell.onclick = function() {
-            if (!isGameStarted) return;
             if (calledNumbers.includes(val)) {
               this.classList.add('selected');
             } else {
@@ -265,85 +273,38 @@
     loadCardByNumber(randomNum);
   }
 
-  function joinAndStartTimer() {
-    if (isGameStarted || countdownInterval) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+  // --- FIREBASE REALTIME LISTENERS ---
+  db.ref('currentGame').on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
 
-    let timeLeft = 30;
-    document.getElementById('status-label').innerText = "Count Down";
-    document.getElementById('timer-val').innerText = timeLeft;
+    if (data.calledNumbers) {
+      calledNumbers = data.calledNumbers;
+      document.getElementById('call-cnt').innerText = calledNumbers.length;
+      
+      let lastNum = calledNumbers[calledNumbers.length - 1];
+      if (lastNum) {
+        let letter = lastNum <= 15 ? 'B' : lastNum <= 30 ? 'I' : lastNum <= 45 ? 'N' : lastNum <= 60 ? 'G' : 'O';
+        let bgColor = lastNum <= 15 ? '#ff9800' : lastNum <= 30 ? '#4caf50' : lastNum <= 45 ? '#2196f3' : lastNum <= 60 ? '#f44336' : '#9c27b0';
+        
+        document.getElementById('current-call').innerText = letter + "-" + lastNum;
+        speakCall(letter + " " + lastNum);
+        
+        document.querySelectorAll('.m-cell.last-called').forEach(c => {
+          c.classList.remove('last-called');
+          c.classList.add('called');
+        });
+        const mCell = document.getElementById('m-' + lastNum);
+        if (mCell) mCell.classList.add('last-called');
 
-    countdownInterval = setInterval(() => {
-      timeLeft--;
-      document.getElementById('timer-val').innerText = timeLeft;
-
-      if (timeLeft <= 0) {
-        clearInterval(countdownInterval);
-        countdownInterval = null;
-        startBingoGame();
+        updateRecentCalls(letter + lastNum, bgColor);
       }
-    }, 1000);
-  }
-
-  function startBingoGame() {
-    isGameStarted = true;
-    calledNumbers = [];
-    document.getElementById('recent-calls').innerHTML = '';
-    document.getElementById('status-label').innerText = "Next Call";
-
-    callNextNumber();
-
-    let nextCallTimer = 5;
-    document.getElementById('timer-val').innerText = nextCallTimer;
-
-    gameInterval = setInterval(() => {
-      nextCallTimer--;
-      document.getElementById('timer-val').innerText = nextCallTimer;
-
-      if (nextCallTimer <= 0) {
-        callNextNumber();
-        nextCallTimer = 5;
-      }
-    }, 1000);
-  }
-
-  function callNextNumber() {
-    if (calledNumbers.length >= 75) {
-      clearInterval(gameInterval);
-      showMsg("ሁሉም ቁጥሮች ተጠርተዋል!");
-      return;
     }
+  });
 
-    let num;
-    do {
-      num = Math.floor(Math.random() * 75) + 1;
-    } while (calledNumbers.includes(num));
-
-    calledNumbers.push(num);
-
-    let letter = "";
-    let bgColor = "";
-    if (num <= 15) { letter = "B"; bgColor = "#ff9800"; }
-    else if (num <= 30) { letter = "I"; bgColor = "#4caf50"; }
-    else if (num <= 45) { letter = "N"; bgColor = "#2196f3"; }
-    else if (num <= 60) { letter = "G"; bgColor = "#f44336"; }
-    else { letter = "O"; bgColor = "#9c27b0"; }
-
-    let callText = letter + " " + num;
-    document.getElementById('current-call').innerText = letter + "-" + num;
-    document.getElementById('call-cnt').innerText = calledNumbers.length;
-
-    // ድምፅ መጥሪያ
-    speakCall(callText);
-
-    document.querySelectorAll('.m-cell.last-called').forEach(c => {
-      c.classList.remove('last-called');
-      c.classList.add('called');
-    });
-    const mCell = document.getElementById('m-' + num);
-    if (mCell) mCell.classList.add('last-called');
-
-    updateRecentCalls(letter + num, bgColor);
+  function joinGame() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    showMsg("በተሳካ ሁኔታ ተቀላቅለዋል! አዲስ ቁጥሮች ሲጠሩ በራስ-ሰር ይደርሰዎታል።");
   }
 
   function updateRecentCalls(label, color) {
@@ -360,12 +321,6 @@
   }
 
   function claimBingo() {
-    if (!isGameStarted) {
-      playSound('error');
-      showMsg("ጨዋታው ገና አልተጀመረም!");
-      return;
-    }
-
     const winPatterns = [
       [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
       [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
@@ -377,7 +332,6 @@
     });
 
     if (isWon) {
-      clearInterval(gameInterval);
       playSound('win');
       showMsg("🎉 BINGO! Board #" + currentBoardNumber + " አሸንፏል!");
     } else {
@@ -387,12 +341,7 @@
   }
 
   function resetGame() {
-    clearInterval(gameInterval);
-    clearInterval(countdownInterval);
-    isGameStarted = false;
-    countdownInterval = null;
-    document.getElementById('status-label').innerText = "Count Down";
-    document.getElementById('timer-val').innerText = "30";
+    calledNumbers = [];
     document.getElementById('current-call').innerText = "-";
     document.getElementById('call-cnt').innerText = "0";
     document.getElementById('recent-calls').innerHTML = '';
