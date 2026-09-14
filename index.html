@@ -120,7 +120,24 @@
     return u === 0 ? tens[t] : tens[t] + " " + units[u];
   }
 
-  function speakNumber(num) {
+function speakNumber(num) {
+    let letter = '';
+    if (num >= 1 && num <= 15) letter = 'B';
+    else if (num >= 16 && num <= 30) letter = 'I';
+    else if (num >= 31 && num <= 45) letter = 'N';
+    else if (num >= 46 && num <= 60) letter = 'G';
+    else if (num >= 61 && num <= 75) letter = 'O';
+
+    const textToSpeak = `${letter} ${num}`;
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.85;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
     let letter = '';
     if (num >= 1 && num <= 15) letter = 'B';
     else if (num >= 16 && num <= 30) letter = 'I';
