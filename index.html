@@ -62,7 +62,10 @@
   </div>
 
   <div class="player-card" id="card-grid"></div>
-
+<div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
+  <button id="sound-btn" onclick="toggleSound()" style="background: #6366f1; color: white; padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer;">🔊 Sound: ON</button>
+  <button onclick="generateCard()" style="background: #0ea5e9; color: white; padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer;">🔄 New Card</button>
+</div>
   <button class="btn-claim" onclick="claimBingo()">BINGO!</button>
   <div id="msg"></div>
 </div>
@@ -85,7 +88,13 @@
   let userCard = [];
   let selectedIndices = new Set([12]);
   let previousLastNumber = null;
+let isMuted = false;
 
+function toggleSound() {
+  isMuted = !isMuted;
+  const btn = document.getElementById('sound-btn');
+  if (btn) btn.innerText = isMuted ? '🔇 Sound: OFF' : '🔊 Sound: ON';
+}
   function unlockAudio() {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.resume();
