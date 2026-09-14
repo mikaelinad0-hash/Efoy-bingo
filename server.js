@@ -41,7 +41,14 @@ function startGameLoop(gameId) {
   }, 4000);
 }
 
-app.get('/', (req, res) => res.send('Efoy Bingo Server Running!'));
+const path = require('path');
+
+// Express ሰርቨሩ ስታቲክ ፋይሎችን እንዲያነብ ማድረግ
+app.use(express.static(path.join(__dirname)));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 app.get('/start-game', (req, res) => {
   availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
