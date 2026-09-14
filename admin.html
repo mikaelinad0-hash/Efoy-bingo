@@ -185,5 +185,13 @@
     }
   }
 </script>
+  // አንድ ተጫዋች BINGO ሲል Auto Call እንዲቆም እና ለአድሚኑ ማሳወቂያ እንዲመጣ
+  db.ref('currentGame/status').on('value', snapshot => {
+    const status = snapshot.val();
+    if (status === 'WON') {
+      stopAutoCall();
+      alert("🎉 BINGO! አንድ ተጫዋች አሸንፏል! ጨዋታው ቆሟል።");
+    }
+  });
 </body>
 </html>
