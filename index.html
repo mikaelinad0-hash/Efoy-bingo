@@ -273,7 +273,16 @@
     loadCardByNumber(randomNum);
   }
 
- // --- FIREBASE REALTIME LISTENERS ---
+// --- AUDIO SYNTHESIS FUNCTION ---
+function speakCall(text) {
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  }
+}
+
+// --- FIREBASE REALTIME LISTENERS ---
 db.ref('currentGame').on('value', snapshot => {
   const data = snapshot.val();
   if (!data) return;
@@ -288,21 +297,38 @@ db.ref('currentGame').on('value', snapshot => {
     calledNumbers = [];
   }
 
+  // 1. Update Call Count
   const callCntEl = document.getElementById('call-cnt');
   if (callCntEl) callCntEl.innerText = calledNumbers.length;
 
+  // 2. Master Board Highlighting
   document.querySelectorAll('.m-cell').forEach(c => c.classList.remove('called', 'last-called'));
   calledNumbers.forEach(num => {
     const mCell = document.getElementById('m-' + num);
     if (mCell) mCell.classList.add('called');
   });
 
+  // 3. Highlight Player's Card Cells Automatically
+  document.querySelectorAll('.card-cell').forEach(cell => {
+    const cellVal = parseInt(cell.innerText);
+    if (calledNumbers.includes(cellVal)) {
+      cell.classList.add('marked');
+    } else {
+      cell.classList.remove('marked');
+    }
+  });
+
+  // 4. Handle Last Called Number & Voice
   let lastNum = calledNumbers[calledNumbers.length - 1];
   if (lastNum !== undefined && lastNum !== null) {
     let letter = lastNum <= 15 ? 'B' : lastNum <= 30 ? 'I' : lastNum <= 45 ? 'N' : lastNum <= 60 ? 'G' : 'O';
-    
+    let callText = letter + "-" + lastNum;
+
     const currentCallEl = document.getElementById('current-call');
-    if (currentCallEl) currentCallEl.innerText = letter + "-" + lastNum;
+    if (currentCallEl && currentCallEl.innerText !== callText) {
+      currentCallEl.innerText = callText;
+      speakCall(callText);
+    }
 
     const mCell = document.getElementById('m-' + lastNum);
     if (mCell) {
