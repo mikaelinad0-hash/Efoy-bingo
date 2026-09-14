@@ -94,7 +94,16 @@
     fullBoardEl.appendChild(d);
   }
 
- // ቁጥርን ወደ አማርኛ ጽሑፍ የሚቀይር ተግባር
+// ድምፅ እንዲሰራ የተጫዋቹን ፈቃድ መውሰጃ
+  let audioContextAllowed = false;
+  
+  function enableAudio() {
+    audioContextAllowed = true;
+    const msg = document.getElementById('msg');
+    if (msg) msg.innerText = "🔊 ድምፅ ተከፍቷል!";
+  }
+
+  // ቁጥርን ወደ አማርኛ ጽሑፍ የሚቀይር ተግባር
   function getAmharicText(num) {
     const units = ["", "አንድ", "ሁለት", "ሦስት", "አራት", "አምስት", "ስድስት", "ሰባት", "ስምንት", "ዘጠኝ"];
     const tens = ["", "አሥር", "ሃያ", "ሠላሳ", "አርባ", "ሃምሳ", "ስድሳ", "ሰባ", "ሰማንያ", "ዘጠና"];
@@ -108,16 +117,28 @@
     return u === 0 ? tens[t] : tens[t] + " " + units[u];
   }
 
-  // በአማርኛ በድምፅ የመጥሪያ ተግባር (Web Speech API)
+  // በአማርኛ በድምፅ የመጥሪያ ተግባር
   function speakNumber(num) {
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // ያለፈው ድምፅ ካልተጨረሰ እንዲያቆም
+      window.speechSynthesis.cancel();
 
       let letter = '';
       if (num >= 1 && num <= 15) letter = 'ቢ';
       else if (num >= 16 && num <= 30) letter = 'አይ';
       else if (num >= 31 && num <= 45) letter = 'ኤን';
       else if (num >= 46 && num <= 60) letter = 'ጂ';
+      else if (num >= 61 && num <= 75) letter = 'ኦ';
+
+      const amharicNum = getAmharicText(num);
+      const textToSpeak = `${letter} ${amharicNum}`;
+      
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'am-ET';
+      utterance.rate = 0.85;
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  }
       else if (num >= 61 && num <= 75) letter = 'ኦ';
 
       const amharicNum = getAmharicText(num);
