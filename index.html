@@ -94,8 +94,21 @@
     fullBoardEl.appendChild(d);
   }
 
+ // ቁጥርን ወደ አማርኛ ጽሑፍ የሚቀይር ተግባር
+  function getAmharicText(num) {
+    const units = ["", "አንድ", "ሁለት", "ሦስት", "አራት", "አምስት", "ስድስት", "ሰባት", "ስምንት", "ዘጠኝ"];
+    const tens = ["", "አሥር", "ሃያ", "ሠላሳ", "አርባ", "ሃምሳ", "ስድሳ", "ሰባ", "ሰማንያ", "ዘጠና"];
+
+    if (num < 10) return units[num];
+    if (num === 10) return "አሥር";
+    if (num < 20) return "አሥራ " + units[num % 10];
+    
+    let t = Math.floor(num / 10);
+    let u = num % 10;
+    return u === 0 ? tens[t] : tens[t] + " " + units[u];
+  }
+
   // ከGoogle API በቀጥታ በአማርኛ በድምፅ የመጥሪያ ተግባር
- // ከGoogle API በቀጥታ በአማርኛ በድምፅ የመጥሪያ ተግባር
   function speakNumber(num) {
     let letter = '';
     if (num >= 1 && num <= 15) letter = 'ቢ';
@@ -104,11 +117,13 @@
     else if (num >= 46 && num <= 60) letter = 'ጂ';
     else if (num >= 61 && num <= 75) letter = 'ኦ';
 
-    const text = encodeURIComponent(`${letter} ${num}`);
+    const amharicNum = getAmharicText(num);
+    const textToSpeak = `${letter} ${amharicNum}`;
+    const text = encodeURIComponent(textToSpeak);
     const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${text}&tl=am&client=tw-ob`;
     
     const audio = new Audio(audioUrl);
-    audio.play().catch(e => console.log("Audio autoplay blocked, click page first:", e));
+    audio.play().catch(e => console.log("Audio autoplay blocked:", e));
   }
   // Firebase Realtime Listener
   db.ref('currentGame').on('value', snapshot => {
