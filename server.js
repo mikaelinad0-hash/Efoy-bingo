@@ -1,5 +1,6 @@
 const express = require('express');
 const admin = require('firebase-admin');
+const path = require('path'); // <-- መጀመሪያ ላይ እዚህ ጋር ይገባል
 const app = express();
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -41,11 +42,7 @@ function startGameLoop(gameId) {
   }, 4000);
 }
 
-const path = require('path');
-
-// Express ሰርቨሩ ስታቲክ ፋይሎችን እንዲያነብ ማድረግ
-app.use(express.static(path.join(__dirname)));
-
+// --- ይቺን ክፍል ቀይረናል ---
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
