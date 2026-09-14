@@ -2,7 +2,7 @@ const express = require('express');
 const admin = require('firebase-admin');
 const app = express();
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) : require('/etc/secrets/serviceAccountKey.json');
 
 if (admin.apps.length === 0) {
   admin.initializeApp({
