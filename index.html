@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>እፎይ ቢንጎ - Efoy Bingo</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #121212; color: white; margin: 0; padding: 20px; }
+        .card { background: #1e1e1e; padding: 15px; border-radius: 12px; margin: 10px auto; max-width: 350px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 15px; }
+        .cell { background: #333; padding: 15px 0; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        .cell.selected { background: #ff9800; color: black; }
+        .btn { background: #4CAF50; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+        .balance { font-size: 20px; color: #4CAF50; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>እፎይ ቢንጎ (Efoy Bingo)</h2>
+        <p>ተጫዋች: <span id="user-name">Loading...</span></p>
+        <p>የሂሳብ ቀሪ: <span id="balance" class="balance">100 ETB</span></p>
+        
+        <div class="grid" id="bingo-board"></div>
+        <button class="btn" onclick="playGame()">ጨዋታ ጀምር (10 ETB)</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // አፑ በሙሉ ስክሪን እንዲከፈት ይረዳል
+
+        // የተጫዋቹን የቴሌግራም መረጃ መቀበል
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+        } else {
+            document.getElementById('user-name').innerText = "ተጫዋች";
+        }
+
+        // የቢንጎ ሰሌዳ መፍጠር (5x5 Grid)
+        const board = document.getElementById('bingo-board');
+        for (let i = 1; i <= 25; i++) {
+            let cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.innerText = Math.floor(Math.random() * 75) + 1;
+            cell.onclick = function() { this.classList.toggle('selected'); };
+            board.appendChild(cell);
+        }
+
+        function playGame() {
+            tg.showAlert("ጨዋታው እየተዘጋጀ ነው! በቅርቡ በቀጥታ (Live) ይጀምራል።");
+        }
+    </script>
+</body>
+</html>
