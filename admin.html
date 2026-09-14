@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>እፎይ ቢንጎ - Admin Panel</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+  <style>
+    body { font-family: sans-serif; background: #1a1a2e; color: #fff; padding: 20px; text-align: center; }
+    .card { background: #16213e; padding: 20px; border-radius: 12px; max-width: 400px; margin: 0 auto; }
+    button { padding: 12px 20px; font-size: 16px; font-weight: bold; margin: 8px; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-call { background: #e94560; color: white; width: 80%; font-size: 20px; }
+    .btn-reset { background: #0f3460; color: white; }
+    .btn-start { background: #4ecca3; color: white; }
+    .display-box { font-size: 32px; font-weight: bold; margin: 15px 0; color: #4ecca3; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>እፎይ ቢንጎ - መቆጣጠሪያ (Admin)</h2>
+  
+  <div>የጨዋታ ሁኔታ: <strong id="status-display">WAIT</strong></div>
+  
+  <div class="display-box">
+    የመጨረሻው ቁጥር: <span id="last-num">-</span>
+  </div>
+
+  <button class="btn-start" onclick="setGameStatus('PLAYING')">ጨዋታ ጀምር (PLAYING)</button>
+  <button class="btn-call" onclick="callRandomNumber()">🎲 ቁጥር ጦር (Call Number)</button>
+  <br>
+  <button class="btn-reset" onclick="resetGameData()">🔄 ጨዋታውን አዲስ አድርግ (Reset)</button>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCjsg9hgwCr8HCtkeVScZPcKTby9TjrUtM",
+    authDomain: "efoy-bingo.firebaseapp.com",
+    databaseURL: "https://efoy-bingo-default-rtdb.firebaseio.com",
+    projectId: "efoy-bingo",
+    storageBucket: "efoy-bingo.firebasestorage.app",
+    messagingSenderId: "893878716636",
+    appId: "1:893878716636:web:7421f98ea5ff5f0e760c19"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let calledNumbers = [];
+
+  // ዳታቤዝ ማዳመጥ
+  db.ref('currentGame').on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
+    
+    if (data.status) document.getElementById('status-display').innerText = data.status;
+    
+    if (data.calledNumbers) {
+      calledNumbers = Array.isArray(data.calledNumbers) ? data.calledNumbers : Object.values(data.calledNumbers);
+      let last = calledNumbers[calledNumbers.length - 1];
+      document.getElementById('last-num').innerText = last !== undefined ? last : '-';
+    } else {
+      calledNumbers = [];
+      document.getElementById('last-num').innerText = '-';
+    }
+  });
+
+  function setGameStatus(status) {
+    db.ref('currentGame/status').set(status);
+  }
+
+  function callRandomNumber() {
+    if (calledNumbers.length >= 75) {
+      alert("ሁሉም ቁጥሮች ተጠርተዋል!");
+      return;
+    }
+    let rand;
+    do {
+      rand = Math.floor(Math.random() * 75) + 1;
+    } while (calledNumbers.includes(rand));
+
+    calledNumbers.push(rand);
+    db.ref('currentGame/calledNumbers').set(calledNumbers);
+  }
+
+  function resetGameData() {
+    if (confirm("እርግጠኛ ነህ ጨዋታውን መመለስ ትፈልጋለህ?")) {
+      db.ref('currentGame').set({
+        status: 'WAIT',
+        calledNumbers: []
+      });
+    }
+  }
+</script>
+</body>
+</html>
