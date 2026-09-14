@@ -7,7 +7,6 @@
   
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-  <script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE_KEY"></script>
 
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -86,17 +85,13 @@
   let userCard = [];
   let selectedIndices = new Set([12]);
   let previousLastNumber = null;
-  let audioContextUnlocked = false;
 
   function unlockAudio() {
-    if (!audioContextUnlocked) {
-      if (window.responsiveVoice) {
-        responsiveVoice.speak("", "Amharic Female");
-      }
-      audioContextUnlocked = true;
-      const btn = document.getElementById('sound-btn');
-      if (btn) btn.innerText = "🔊 ድምፅ ተከፍቷል";
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.resume();
     }
+    const btn = document.getElementById('sound-btn');
+    if (btn) btn.innerText = "🔊 ድምፅ ተከፍቷል";
   }
 
   const fullBoardEl = document.getElementById('full-board');
@@ -107,20 +102,7 @@
     fullBoardEl.appendChild(d);
   }
 
-  function getAmharicText(num) {
-    const units = ["", "አንድ", "ሁለት", "ሦስት", "አራት", "አምስት", "ስድስት", "ሰባት", "ስምንት", "ዘጠኝ"];
-    const tens = ["", "አሥር", "ሃያ", "ሠላሳ", "አርባ", "ሃምሳ", "ስድሳ", "ሰባ", "ሰማንያ", "ዘጠና"];
-
-    if (num < 10) return units[num];
-    if (num === 10) return "አሥር";
-    if (num < 20) return "አሥራ " + units[num % 10];
-    
-    let t = Math.floor(num / 10);
-    let u = num % 10;
-    return u === 0 ? tens[t] : tens[t] + " " + units[u];
-  }
-
-function speakNumber(num) {
+  function speakNumber(num) {
     let letter = '';
     if (num >= 1 && num <= 15) letter = 'B';
     else if (num >= 16 && num <= 30) letter = 'I';
@@ -136,43 +118,6 @@ function speakNumber(num) {
       utterance.lang = 'en-US';
       utterance.rate = 0.85;
       window.speechSynthesis.speak(utterance);
-    }
-  }
-    let letter = '';
-    if (num >= 1 && num <= 15) letter = 'B';
-    else if (num >= 16 && num <= 30) letter = 'I';
-    else if (num >= 31 && num <= 45) letter = 'N';
-    else if (num >= 46 && num <= 60) letter = 'G';
-    else if (num >= 61 && num <= 75) letter = 'O';
-
-    const textToSpeak = `${letter} ${num}`;
-
-    // በእንግሊዝኛ ድምፅ እንዲናገር
-    if (window.responsiveVoice) {
-      responsiveVoice.speak(textToSpeak, "UK English Female", {rate: 0.85});
-    } else {
-      // ብራውዘሩ በራሱ እንዲናገር (Fallback)
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.85;
-        window.speechSynthesis.speak(utterance);
-      }
-    }
-  }
-    let letter = '';
-    if (num >= 1 && num <= 15) letter = 'ቢ';
-    else if (num >= 16 && num <= 30) letter = 'አይ';
-    else if (num >= 31 && num <= 45) letter = 'ኤን';
-    else if (num >= 46 && num <= 60) letter = 'ጂ';
-    else if (num >= 61 && num <= 75) letter = 'ኦ';
-
-    const amharicNum = getAmharicText(num);
-    const textToSpeak = `${letter} ${amharicNum}`;
-
-    if (window.responsiveVoice) {
-      responsiveVoice.speak(textToSpeak, "Amharic Female", {rate: 0.85});
     }
   }
 
