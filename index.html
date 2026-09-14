@@ -107,6 +107,24 @@
   for (let i = 1; i <= 75; i++) {
     let d = document.createElement('div');
     d.id = `board-num-${i}`;
+    d.innerText = i;
+    fullBoardEl.appendChild(d);
+  }
+
+  // ቁጥርን ወደ አማርኛ ጽሑፍ የሚቀይር ተግባር
+  function getAmharicText(num) {
+    const units = ["", "አንድ", "ሁለት", "ሦስት", "አራት", "አምስት", "ስድስት", "ሰባት", "ስምንት", "ዘጠኝ"];
+    const tens = ["", "አሥር", "ሃያ", "ሠላሳ", "አርባ", "ሃምሳ", "ስድሳ", "ሰባ", "ሰማንያ", "ዘጠና"];
+
+    if (num < 10) return units[num];
+    if (num === 10) return "አሥር";
+    if (num < 20) return "አሥራ " + units[num % 10];
+    
+    let t = Math.floor(num / 10);
+    let u = num % 10;
+    return u === 0 ? tens[t] : tens[t] + " " + units[u];
+  }
+
   // ከGoogle TTS በድምፅ የመጥሪያ ተግባር (አስተማማኝ አሰራር)
   function speakNumber(num) {
     let letter = '';
@@ -118,27 +136,7 @@
 
     const amharicNum = getAmharicText(num);
     const textToSpeak = `${letter} ${amharicNum}`;
-    
-    // Web Speech API (ብራውዘሩ አፌክት ሳይደረግ በቀጥታ እንዲናገር)
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'am-ET';
-      utterance.rate = 0.85;
-      window.speechSynthesis.speak(utterance);
-  // ከGoogle TTS በድምፅ የመጥሪያ ተግባር (አስተማማኝ አሰራር)
-  function speakNumber(num) {
-    let letter = '';
-    if (num >= 1 && num <= 15) letter = 'ቢ';
-    else if (num >= 16 && num <= 30) letter = 'አይ';
-    else if (num >= 31 && num <= 45) letter = 'ኤን';
-    else if (num >= 46 && num <= 60) letter = 'ጂ';
-    else if (num >= 61 && num <= 75) letter = 'ኦ';
 
-    const amharicNum = getAmharicText(num);
-    const textToSpeak = `${letter} ${amharicNum}`;
-    
-    // Web Speech API
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
@@ -147,13 +145,18 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    // Google Audio Fallback
     const text = encodeURIComponent(textToSpeak);
     const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${text}&tl=am&client=tw-ob`;
     const audio = new Audio(audioUrl);
     audio.crossOrigin = "anonymous";
     audio.play().catch(e => console.log("Audio block error:", e));
   }
+
+  // Firebase Realtime Listener
+  db.ref('currentGame').on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
+
     if (data.status) document.getElementById('game-status').innerText = data.status;
 
     if (data.calledNumbers) {
