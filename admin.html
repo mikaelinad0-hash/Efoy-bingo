@@ -184,14 +184,14 @@
       });
     }
   }
-</script>
-  // አንድ ተጫዋች BINGO ሲል Auto Call እንዲቆም እና ለአድሚኑ ማሳወቂያ እንዲመጣ
-  db.ref('currentGame/status').on('value', snapshot => {
-    const status = snapshot.val();
-    if (status === 'WON') {
+   // አንድ ተጫዋች BINGO ሲል Auto Call እንዲቆም እና ለአድሚኑ ማሳወቂያ እንዲመጣ
+  db.ref('currentGame/winner').on('value', snapshot => {
+    const winner = snapshot.val();
+    if (winner && winner.status === 'CLAIMED') {
       stopAutoCall();
-      alert("🎉 BINGO! አንድ ተጫዋች አሸንፏል! ጨዋታው ቆሟል።");
+      alert(`🎉 BINGO! ተጫዋች አሸንፏል!\nየተመረጡ ቁጥሮች: ${winner.selectedNumbers ? winner.selectedNumbers.join(', ') : ''}`);
     }
   });
+</script>
 </body>
 </html>
