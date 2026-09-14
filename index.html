@@ -108,16 +108,29 @@
     return u === 0 ? tens[t] : tens[t] + " " + units[u];
   }
 
-  // ከGoogle API በቀጥታ በአማርኛ በድምፅ የመጥሪያ ተግባር
+  // በአማርኛ በድምፅ የመጥሪያ ተግባር (Web Speech API)
   function speakNumber(num) {
-    let letter = '';
-    if (num >= 1 && num <= 15) letter = 'ቢ';
-    else if (num >= 16 && num <= 30) letter = 'አይ';
-    else if (num >= 31 && num <= 45) letter = 'ኤን';
-    else if (num >= 46 && num <= 60) letter = 'ጂ';
-    else if (num >= 61 && num <= 75) letter = 'ኦ';
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // ያለፈው ድምፅ ካልተጨረሰ እንዲያቆም
 
-    const amharicNum = getAmharicText(num);
+      let letter = '';
+      if (num >= 1 && num <= 15) letter = 'ቢ';
+      else if (num >= 16 && num <= 30) letter = 'አይ';
+      else if (num >= 31 && num <= 45) letter = 'ኤን';
+      else if (num >= 46 && num <= 60) letter = 'ጂ';
+      else if (num >= 61 && num <= 75) letter = 'ኦ';
+
+      const amharicNum = getAmharicText(num);
+      const textToSpeak = `${letter} ${amharicNum}`;
+      
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'am-ET';
+      utterance.rate = 0.8;
+      utterance.pitch = 1.0;
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  }
     const textToSpeak = `${letter} ${amharicNum}`;
     const text = encodeURIComponent(textToSpeak);
     const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${text}&tl=am&client=tw-ob`;
