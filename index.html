@@ -7,7 +7,7 @@
   
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
+<script src="https://code.responsivevoice.org/responsivevoice.js?key=FREE_KEY"></script>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #7b73c2; margin: 0; padding: 10px; display: flex; justify-content: center; }
@@ -126,7 +126,7 @@
   }
 
   // ከGoogle TTS በድምፅ የመጥሪያ ተግባር (አስተማማኝ አሰራር)
-  function speakNumber(num) {
+function speakNumber(num) {
     let letter = '';
     if (num >= 1 && num <= 15) letter = 'ቢ';
     else if (num >= 16 && num <= 30) letter = 'አይ';
@@ -137,19 +137,10 @@
     const amharicNum = getAmharicText(num);
     const textToSpeak = `${letter} ${amharicNum}`;
 
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'am-ET';
-      utterance.rate = 0.85;
-      window.speechSynthesis.speak(utterance);
+    if (window.responsiveVoice) {
+      responsiveVoice.speak(textToSpeak, "Amharic Female", {rate: 0.85});
     }
-
-    const text = encodeURIComponent(textToSpeak);
-    const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${text}&tl=am&client=tw-ob`;
-    const audio = new Audio(audioUrl);
-    audio.crossOrigin = "anonymous";
-    audio.play().catch(e => console.log("Audio block error:", e));
+  }
   }
 
   // Firebase Realtime Listener
