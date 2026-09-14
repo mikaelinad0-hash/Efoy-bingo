@@ -3,68 +3,467 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Efoy Bingo - Firebase Multiplayer</title>
+  <title>እፎይ ቢንጎ - Firebase Multiplayer</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <!-- Firebase SDKs -->
+  
+  <!-- Firebase SDKs (v9 CDN Compatible) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
   <style>
-    /* የካርድ እና የቦርድ ዲዛይን ስታይል እዚህ ጋር ይቀጥላል */
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #8c68cd; color: #fff; margin: 0; padding: 10px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 480px; background: #9c71d9; border-radius: 16px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+    
+    .top-bar { display: flex; justify-content: space-between; background: #fff; color: #522d80; padding: 6px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 10px; text-align: center; }
+    .top-item { flex: 1; }
+    .sound-btn { cursor: pointer; user-select: none; }
+
+    .main-layout { display: flex; gap: 8px; margin-bottom: 10px; }
+    
+    .master-board-container { width: 44%; background: #a87be3; border-radius: 10px; padding: 6px; }
+    .bingo-header-mini { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; text-align: center; font-weight: bold; font-size: 11px; margin-bottom: 4px; }
+    .b-h { background: #ff9800; border-radius: 4px; color: #fff; }
+    .i-h { background: #4caf50; border-radius: 4px; color: #fff; }
+    .n-h { background: #2196f3; border-radius: 4px; color: #fff; }
+    .g-h { background: #f44336; border-radius: 4px; color: #fff; }
+    .o-h { background: #9c27b0; border-radius: 4px; color: #fff; }
+    .master-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+    .m-cell { background: rgba(255,255,255,0.35); color: #fff; text-align: center; font-size: 9px; padding: 3px 0; border-radius: 3px; font-weight: bold; }
+    .m-cell.called { background: #ff5722; color: #fff; }
+    .m-cell.last-called { background: #4CAF50; color: #fff; }
+
+    .right-panel { width: 56%; display: flex; flex-direction: column; gap: 8px; }
+    .status-box { background: #b184ed; border-radius: 10px; padding: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .status-title { font-size: 12px; font-weight: bold; color: #2e0961; }
+    .status-value { font-size: 18px; font-weight: bold; color: #3b0675; }
+    
+    .current-call-box { background: #6a3d9e; border-radius: 10px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
+    .call-circle { width: 48px; height: 48px; background: #ff7043; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 15px; font-weight: bold; color: #fff; }
+
+    .recent-calls { background: #b184ed; border-radius: 10px; padding: 6px; display: flex; justify-content: center; gap: 6px; height: 36px; align-items: center; }
+    .recent-ball { width: 26px; height: 26px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 9px; font-weight: bold; color: white; }
+
+    .player-card { background: #a87be3; border-radius: 10px; padding: 8px; }
+    .bingo-header { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 6px; }
+    .card-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+    .cell { background: #fff; color: #2a0845; text-align: center; padding: 8px 0; font-weight: bold; font-size: 18px; border-radius: 6px; cursor: pointer; user-select: none; }
+    .cell.selected { background: #ff5722 !important; color: #fff !important; }
+    .cell.free { background: #2e7d32; color: #fff; display: flex; justify-content: center; align-items: center; }
+    .free-dot { width: 10px; height: 10px; background: #fff; border-radius: 50%; }
+    
+    .board-select-area { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 6px; }
+    .board-input { width: 60px; padding: 4px; border-radius: 6px; border: none; text-align: center; font-weight: bold; }
+
+    .bingo-btn { background: linear-gradient(180deg, #ff9800 0%, #e65100 100%); color: white; border: none; padding: 12px; border-radius: 25px; font-size: 20px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .bottom-btns { display: flex; gap: 8px; margin-top: 8px; }
+    .action-btn { flex: 1; padding: 10px; border: none; border-radius: 20px; color: white; font-weight: bold; font-size: 12px; cursor: pointer; }
+    .btn-refresh { background: #00bcd4; }
+    .btn-leave { background: #f44336; }
+    .btn-start { background: #4caf50; }
   </style>
 </head>
 <body>
 
-  <!-- የቢንጎ UI አቀማመጥ (Header, Board, Current Call, Buttons...) -->
+<div class="container">
+  <div class="top-bar">
+    <div class="top-item">Game<br><span id="game-id">PS9731</span></div>
+    <div class="top-item">Derash<br><span>686.4</span></div>
+    <div class="top-item">Bonus<br><span>On</span></div>
+    <div class="top-item">Players<br><span id="players-cnt">1</span></div>
+    <div class="top-item">Stake<br><span>10</span></div>
+    <div class="top-item">Call<br><span id="call-cnt">0</span></div>
+    <div class="top-item sound-btn" onclick="toggleSound()">Sound<br><span id="sound-status">🔊 ON</span></div>
+  </div>
 
-  <script>
-    // --- 1. Telegram WebApp Init ---
-    const tg = window.Telegram?.WebApp;
-    if (tg) tg.expand();
+  <div class="main-layout">
+    <div class="master-board-container">
+      <div class="bingo-header-mini">
+        <div class="b-h">B</div><div class="i-h">I</div><div class="n-h">N</div><div class="g-h">G</div><div class="o-h">O</div>
+      </div>
+      <div class="master-grid" id="master-grid"></div>
+    </div>
 
-    function showMsg(msg) {
-      if (tg && tg.showAlert) tg.showAlert(msg);
-      else alert(msg);
+    <div class="right-panel">
+      <div class="status-box">
+        <div class="status-title" id="status-label">Status</div>
+        <div class="status-value" id="timer-val">WAIT</div>
+      </div>
+      
+      <div class="current-call-box">
+        <span style="font-size: 11px; font-weight: bold;">Current Call</span>
+        <div class="call-circle" id="current-call">-</div>
+      </div>
+
+      <div class="recent-calls" id="recent-calls"></div>
+    </div>
+  </div>
+
+  <div class="player-card">
+    <div class="bingo-header">
+      <div class="b-h">B</div><div class="i-h">I</div><div class="n-h">N</div><div class="g-h">G</div><div class="o-h">O</div>
+    </div>
+    <div class="card-grid" id="player-board"></div>
+    
+    <div class="board-select-area">
+      <span style="font-size: 12px; font-weight: bold;">Board Number:</span>
+      <input type="number" id="board-id-input" class="board-input" value="20" min="1" max="100" onchange="loadCardByNumber(this.value)">
+    </div>
+  </div>
+
+  <button class="bingo-btn" onclick="claimBingo()">BINGO!</button>
+  <div class="bottom-btns">
+    <button class="action-btn btn-start" onclick="joinGame()">ተቀላቀል (10 ETB)</button>
+    <button class="action-btn btn-refresh" onclick="randomBoard()">Refresh</button>
+    <button class="action-btn btn-leave" onclick="resetGame()">Leave</button>
+  </div>
+</div>
+
+<script>
+  const tg = window.Telegram ? window.Telegram.WebApp : null;
+  if (tg) tg.expand();
+
+  // --- FIREBASE INITIALIZATION ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCjsg9hgwCr8HCtkeVScZPcKTby9TjrUtM",
+    authDomain: "efoy-bingo.firebaseapp.com",
+    databaseURL: "https://efoy-bingo-default-rtdb.firebaseio.com",
+    projectId: "efoy-bingo",
+    storageBucket: "efoy-bingo.firebasestorage.app",
+    messagingSenderId: "893878716636",
+    appId: "1:893878716636:web:7421f98ea5ff5f0e760c19",
+    measurementId: "G-5FPZE60PCP"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let calledNumbers = [];
+  let playerBoardState = [];
+  let currentBoardNumber = 20;
+  let isSoundOn = true;
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playSound(type) {
+    if (!isSoundOn) return;
+    if (type === 'win') {
+      let notes = [261.63, 329.63, 392.00, 523.25];
+      notes.forEach((freq, idx) => {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime + idx * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + idx * 0.12 + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + idx * 0.12);
+        osc.stop(audioCtx.currentTime + idx * 0.12 + 0.3);
+      });
+    } else if (type === 'error') {
+      let osc = audioCtx.createOscillator();
+      let gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.value = 150;
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.2);
+    }
+  }
+
+  function speakCall(text) {
+    if (!isSoundOn) return;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      let utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  function toggleSound() {
+    isSoundOn = !isSoundOn;
+    document.getElementById('sound-status').innerText = isSoundOn ? '🔊 ON' : '🔇 OFF';
+  }
+
+  function initMasterBoard() {
+    const masterGrid = document.getElementById('master-grid');
+    masterGrid.innerHTML = '';
+    for (let r = 0; r < 15; r++) {
+      for (let c = 0; c < 5; c++) {
+        let num = c * 15 + (r + 1);
+        let cell = document.createElement('div');
+        cell.className = 'm-cell';
+        cell.id = 'm-' + num;
+        cell.innerText = num;
+        masterGrid.appendChild(cell);
+      }
+    }
+  }
+
+  function getBoardGridBySeed(boardNum) {
+    let seed = boardNum * 12345;
+    function pseudoRandom(min, max) {
+      seed = (seed * 9301 + 49297) % 233280;
+      let rnd = seed / 233280;
+      return Math.floor(min + rnd * (max - min + 1));
     }
 
-    // --- 2. Firebase Config & Initialization ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyCjsg9hgwCr8HCtkeVScZPcKTby9TJrUtM",
-      authDomain: "efoy-bingo.firebaseapp.com",
-      databaseURL: "https://efoy-bingo-default-rtdb.firebaseio.com",
-      projectId: "efoy-bingo",
-      storageBucket: "efoy-bingo.firebasestorage.app",
-      messagingSenderId: "893878716636",
-      appId: "1:893878716636:web:7421f98ea5ff5f0e760c19",
-      measurementId: "G-5FPZE60PCP"
-    };
-
-    // Firebase ን ማስጀመር
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    // --- 3. Realtime Database Listener ---
-    database.ref('games/game_PS9731').on('value', (snapshot) => {
-      const gameData = snapshot.val();
-      console.log("ከ Firebase የመጣ ዳታ፦", gameData);
-
-      if (gameData) {
-        // የጨዋታውን ሁኔታ (WAIT, PLAYING...) UI ላይ ማዘመን
-        const statusElement = document.getElementById('status-text');
-        if (statusElement) statusElement.innerText = gameData.status;
-
-        // የወጣውን ቁጥር (Current Call) ማሳየት
-        const currentCallElement = document.getElementById('current-call');
-        if (currentCallElement && gameData.currentCall !== null) {
-          currentCallElement.innerText = gameData.currentCall;
-        }
+    function getColumnNums(min, max) {
+      let nums = [];
+      while (nums.length < 5) {
+        let n = pseudoRandom(min, max);
+        if (!nums.includes(n)) nums.push(n);
       }
+      return nums;
+    }
+
+    return [
+      getColumnNums(1, 15),
+      getColumnNums(16, 30),
+      getColumnNums(31, 45),
+      getColumnNums(46, 60),
+      getColumnNums(61, 75)
+    ];
+  }
+
+  function loadCardByNumber(boardNum) {
+    currentBoardNumber = parseInt(boardNum) || 1;
+    document.getElementById('board-id-input').value = currentBoardNumber;
+
+    const board = document.getElementById('player-board');
+    board.innerHTML = '';
+    playerBoardState = [];
+
+    let columns = getBoardGridBySeed(currentBoardNumber);
+
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 5; col++) {
+        let cell = document.createElement('div');
+        cell.className = 'cell';
+
+        if (row === 2 && col === 2) {
+          cell.classList.add('selected', 'free');
+          cell.innerHTML = '<div class="free-dot"></div>';
+        } else {
+          let val = columns[col][row];
+          cell.innerText = val;
+          cell.onclick = function() {
+            if (calledNumbers.includes(val)) {
+              this.classList.add('selected');
+            } else {
+              playSound('error');
+              showMsg("ይህ ቁጥር ገና አልተጠራም!");
+            }
+          };
+        }
+
+        board.appendChild(cell);
+        playerBoardState.push(cell);
+      }
+    }
+  }
+
+  function randomBoard() {
+    let randomNum = Math.floor(Math.random() * 100) + 1;
+    loadCardByNumber(randomNum);
+  }
+
+// --- AUDIO SYNTHESIS FUNCTION ---
+function speakCall(text) {
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  }
+}
+
+// --- FIREBASE REALTIME LISTENERS ---
+db.ref('currentGame').on('value', snapshot => {
+  const data = snapshot.val();
+  if (!data) return;
+
+  if (data.calledNumbers) {
+    if (Array.isArray(data.calledNumbers)) {
+      calledNumbers = data.calledNumbers;
+    } else if (typeof data.calledNumbers === 'object') {
+      calledNumbers = Object.values(data.calledNumbers);
+    }
+  } else {
+    calledNumbers = [];
+  }
+
+  // 1. Update Call Count
+  const callCntEl = document.getElementById('call-cnt');
+  if (callCntEl) callCntEl.innerText = calledNumbers.length;
+
+  // 2. Master Board Highlighting
+  document.querySelectorAll('.m-cell').forEach(c => c.classList.remove('called', 'last-called'));
+  calledNumbers.forEach(num => {
+    const mCell = document.getElementById('m-' + num);
+    if (mCell) mCell.classList.add('called');
+  });
+
+  // 3. Highlight Player's Card Cells Automatically
+  document.querySelectorAll('.card-cell').forEach(cell => {
+    const cellVal = parseInt(cell.innerText);
+    if (calledNumbers.includes(cellVal)) {
+      cell.classList.add('marked');
+    } else {
+      cell.classList.remove('marked');
+    }
+  });
+
+  // 4. Handle Last Called Number & Voice
+  let lastNum = calledNumbers[calledNumbers.length - 1];
+  if (lastNum !== undefined && lastNum !== null) {
+    let letter = lastNum <= 15 ? 'B' : lastNum <= 30 ? 'I' : lastNum <= 45 ? 'N' : lastNum <= 60 ? 'G' : 'O';
+    let callText = letter + "-" + lastNum;
+
+    const currentCallEl = document.getElementById('current-call');
+    if (currentCallEl && currentCallEl.innerText !== callText) {
+      currentCallEl.innerText = callText;
+      speakCall(callText);
+    }
+
+    const mCell = document.getElementById('m-' + lastNum);
+    if (mCell) {
+      mCell.classList.remove('called');
+      mCell.classList.add('last-called');
+    }
+  }
+});
+// --- BINGO VALIDATOR LOGIC (WITH FOUR CORNERS) ---
+function checkBingo() {
+  const cardCells = Array.from(document.querySelectorAll('.card-cell'));
+  if (cardCells.length < 25) {
+    showMsg("❌ እባክዎን አስቀድመው ካርድ ይምረጡ!");
+    return;
+  }
+
+  // Extract 5x5 Grid from Player's Card
+  let grid = [];
+  for (let i = 0; i < 5; i++) {
+    let row = [];
+    for (let j = 0; j < 5; j++) {
+      let idx = i * 5 + j;
+      let textVal = cardCells[idx].innerText.trim();
+      // Center cell or FREE space is considered auto-matched
+      if (textVal === 'FREE' || textVal === '★' || idx === 12) {
+        row.push(true);
+      } else {
+        let numVal = parseInt(textVal);
+        row.push(calledNumbers.includes(numVal));
+      }
+    }
+    grid.push(row);
+  }
+
+  let isWinning = false;
+
+  // 1. Check Rows (Horizontal)
+  for (let i = 0; i < 5; i++) {
+    if (grid[i].every(val => val === true)) isWinning = true;
+  }
+
+  // 2. Check Columns (Vertical)
+  for (let j = 0; j < 5; j++) {
+    if (grid.map(row => row[j]).every(val => val === true)) isWinning = true;
+  }
+
+  // 3. Check Diagonals
+  let diag1 = [grid[0][0], grid[1][1], grid[2][2], grid[3][3], grid[4][4]];
+  let diag2 = [grid[0][4], grid[1][3], grid[2][2], grid[3][1], grid[4][0]];
+
+  if (diag1.every(val => val === true) || diag2.every(val => val === true)) {
+    isWinning = true;
+  }
+
+  // 4. Check Four Corners (አራቱ ጫፎች)
+  let fourCorners = [grid[0][0], grid[0][4], grid[4][0], grid[4][4]];
+  if (fourCorners.every(val => val === true)) {
+    isWinning = true;
+  }
+
+  // Announcement and Voice Effect
+  if (isWinning) {
+    showMsg("🎉 እንኳን ደስ አለዎት! በትክክል አሸንፈዋል (BINGO)! 🎉");
+    speakCall("Bingo! You won!");
+    db.ref('currentGame/status').set('ENDED');
+  } else {
+    showMsg("⚠️ ገና አልሞላም! እባክዎን የተጠሩትን ቁጥሮች በትክክል ያረጋግጡ።");
+    speakCall("False Bingo!");
+  }
+}
+  function joinGame() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    showMsg("በተሳካ ሁኔታ ተቀላቅለዋል! አዲስ ቁጥሮች ሲጠሩ በራስ-ሰር ይደርሰዎታል።");
+  }
+
+  function updateRecentCalls(label, color) {
+    const recentContainer = document.getElementById('recent-calls');
+    let ball = document.createElement('div');
+    ball.className = 'recent-ball';
+    ball.style.backgroundColor = color;
+    ball.innerText = label;
+
+    recentContainer.prepend(ball);
+    if (recentContainer.children.length > 4) {
+      recentContainer.removeChild(recentContainer.lastChild);
+    }
+  }
+
+  function claimBingo() {
+    const winPatterns = [
+      [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
+      [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
+      [0,6,12,18,24], [4,8,12,16,20]
+    ];
+
+    const isWon = winPatterns.some(pattern => {
+      return pattern.every(idx => playerBoardState[idx].classList.contains('selected'));
     });
 
-    // --- 4. የቦርድ እና የካርድ አጀማመር ተግባራት ---
+    if (isWon) {
+      playSound('win');
+      showMsg("🎉 BINGO! Board #" + currentBoardNumber + " አሸንፏል!");
+    } else {
+      playSound('error');
+      showMsg("ገና አልሞሉም! ሰሌዳዎን ያረጋግጡ።");
+    }
+  }
+
+  function resetGame() {
+    calledNumbers = [];
+    document.getElementById('current-call').innerText = "-";
+    document.getElementById('call-cnt').innerText = "0";
+    document.getElementById('recent-calls').innerHTML = '';
     initMasterBoard();
-    loadCardByNumber(20);
-  </script>
+    loadCardByNumber(currentBoardNumber);
+  }
+
+  function showMsg(msg) {
+    if (tg && tg.showAlert) tg.showAlert(msg);
+    else alert(msg);
+  }
+
+  initMasterBoard();
+  loadCardByNumber(20);
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCjsg9hgwCr8HCtkeVScZPcKTby9TjrUtM",
+  authDomain: "efoy-bingo.firebaseapp.com",
+  databaseURL: "https://efoy-bingo-default-rtdb.firebaseio.com",
+  projectId: "efoy-bingo",
+  storageBucket: "efoy-bingo.firebasestorage.app",
+  messagingSenderId: "893878716636",
+  appId: "1:893878716636:web:7421f98ea5ff5f0e760c19",
+  measurementId: "G-5FPZE60PCP"
+};
+</script>
 </body>
 </html>
