@@ -94,18 +94,20 @@
     fullBoardEl.appendChild(d);
   }
 
-  // ቁጥር በድምፅ የመጥሪያ ተግባር (Text-to-Speech)
+  // ቁጥር በአማርኛ በድምፅ የመጥሪያ ተግባር (Text-to-Speech)
   function speakNumber(num) {
     if ('speechSynthesis' in window) {
       let letter = '';
-      if (num >= 1 && num <= 15) letter = 'B';
-      else if (num >= 16 && num <= 30) letter = 'I';
-      else if (num >= 31 && num <= 45) letter = 'N';
-      else if (num >= 46 && num <= 60) letter = 'G';
-      else if (num >= 61 && num <= 75) letter = 'O';
+      if (num >= 1 && num <= 15) letter = 'ቢ';
+      else if (num >= 16 && num <= 30) letter = 'አይ';
+      else if (num >= 31 && num <= 45) letter = 'ኤን';
+      else if (num >= 46 && num <= 60) letter = 'ጂ';
+      else if (num >= 61 && num <= 75) letter = 'ኦ';
 
-      const utterance = new SpeechSynthesisUtterance(`${letter} ${num}`);
-      utterance.rate = 0.9; // የድምፅ ፍጥነት
+      const textToSpeak = `${letter} ${num}`;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'am-ET'; // የአማርኛ ድምፅ አጠራር
+      utterance.rate = 0.85;
       utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
     }
