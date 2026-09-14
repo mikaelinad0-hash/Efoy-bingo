@@ -274,14 +274,13 @@
   }
 
   // --- FIREBASE REALTIME LISTENERS ---
-  db.ref('currentGame').on('value', snapshot => {
-    const data = snapshot.val();
-    if (!data) return;
+  db.ref('currentGame/calledNumbers').on('value', snapshot => {
+   const data = snapshot.val();
+  if (!data) return;
 
-    if (data.calledNumbers) {
-      calledNumbers = data.calledNumbers;
-      document.getElementById('call-cnt').innerText = calledNumbers.length;
-      
+  calledNumbers = Array.isArray(data) ? data : Object.values(data);
+  document.getElementById('call-cnt').innerText = calledNumbers.length;
+       
       let lastNum = calledNumbers[calledNumbers.length - 1];
       if (lastNum) {
         let letter = lastNum <= 15 ? 'B' : lastNum <= 30 ? 'I' : lastNum <= 45 ? 'N' : lastNum <= 60 ? 'G' : 'O';
