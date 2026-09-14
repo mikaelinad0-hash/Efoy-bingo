@@ -1,54 +1,86 @@
 <!DOCTYPE html>
 <html lang="am">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>እፎይ ቢንጎ - Efoy Bingo</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #121212; color: white; margin: 0; padding: 20px; }
-        .card { background: #1e1e1e; padding: 15px; border-radius: 12px; margin: 10px auto; max-width: 350px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 15px; }
-        .cell { background: #333; padding: 15px 0; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; }
-        .cell.selected { background: #ff9800; color: black; }
-        .btn { background: #4CAF50; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
-        .balance { font-size: 20px; color: #4CAF50; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>እፎይ ቢንጎ - Efoy Bingo</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #121212; color: #fff; text-align: center; margin: 0; padding: 20px; }
+    .card { background: #1e1e1e; padding: 15px; border-radius: 12px; max-width: 400px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
+    .cell { background: #333; padding: 15px 0; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 18px; user-select: none; }
+    .cell.selected { background: #4CAF50 !important; color: #fff !important; }
+    .btn { background: #4CAF50; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+    .balance { font-size: 18px; color: #4CAF50; margin-bottom: 10px; }
+    .called-box { background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 20px; font-weight: bold; color: #ff9800; }
+  </style>
 </head>
 <body>
-    <div class="card">
-        <h2>እፎይ ቢንጎ (Efoy Bingo)</h2>
-        <p>ተጫዋች: <span id="user-name">Loading...</span></p>
-        <p>የሂሳብ ቀሪ: <span id="balance" class="balance">100 ETB</span></p>
-        
-        <div class="grid" id="bingo-board"></div>
-        <button class="btn" onclick="playGame()">ጨዋታ ጀምር (10 ETB)</button>
-    </div>
+  <div class="card">
+    <h2>እፎይ ቢንጎ (Efoy Bingo)</h2>
+    <div class="balance">የሒሳብ ቀሪ: <span id="balance-val">100</span> ETB</div>
+    <div class="called-box" id="called-num">የተጠራ ቁጥር: -</div>
+    
+    <div class="grid" id="bingo-board"></div>
+    
+    <button class="btn" onclick="startGame()">ጨዋታ ጀምር (10 ETB)</button>
+  </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // አፑ በሙሉ ስክሪን እንዲከፈት ይረዳል
+  <script>
+    const tg = window.Telegram ? window.Telegram.WebApp : null;
+    if (tg) tg.expand();
 
-        // የተጫዋቹን የቴሌግራም መረጃ መቀበል
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+    let calledNumbers = [];
+    let gameInterval = null;
+
+    // የቦርድ ቁጥሮች መፍጠር (5x5 Grid)
+    const board = document.getElementById('bingo-board');
+    for (let i = 1; i <= 25; i++) {
+      let cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.innerText = Math.floor(Math.random() * 75) + 1;
+      cell.onclick = function() {
+        const num = parseInt(this.innerText);
+        if (calledNumbers.includes(num)) {
+          this.classList.add('selected');
         } else {
-            document.getElementById('user-name').innerText = "ተጫዋች";
+          if (tg && tg.showAlert) {
+            tg.showAlert("ይህ ቁጥር ገና አልተጠራም!");
+          } else {
+            alert("ይህ ቁጥር ገና አልተጠራም!");
+          }
+        }
+      };
+      board.appendChild(cell);
+    }
+
+    // የጨዋታው ሎጅክ
+    function startGame() {
+      if (gameInterval) clearInterval(gameInterval);
+      calledNumbers = [];
+      document.querySelectorAll('.cell').forEach(c => c.classList.remove('selected'));
+      
+      if (tg && tg.showAlert) {
+        tg.showAlert("ጨዋታው ተጀምሯል!");
+      }
+
+      gameInterval = setInterval(() => {
+        if (calledNumbers.length >= 75) {
+          clearInterval(gameInterval);
+          if (tg && tg.showAlert) tg.showAlert("ሁሉም ቁጥሮች ተጠርተዋል!");
+          return;
         }
 
-        // የቢንጎ ሰሌዳ መፍጠር (5x5 Grid)
-        const board = document.getElementById('bingo-board');
-        for (let i = 1; i <= 25; i++) {
-            let cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.innerText = Math.floor(Math.random() * 75) + 1;
-            cell.onclick = function() { this.classList.toggle('selected'); };
-            board.appendChild(cell);
-        }
+        let randomNumber;
+        do {
+          randomNumber = Math.floor(Math.random() * 75) + 1;
+        } while (calledNumbers.includes(randomNumber));
 
-        function playGame() {
-            tg.showAlert("ጨዋታው እየተዘጋጀ ነው! በቅርቡ በቀጥታ (Live) ይጀምራል።");
-        }
-    </script>
+        calledNumbers.push(randomNumber);
+        document.getElementById("called-num").innerText = "የተጠራ ቁጥር: " + randomNumber;
+      }, 3000);
+    }
+  </script>
 </body>
 </html>
