@@ -112,7 +112,7 @@
     </div>
   </div>
   
-  <div class="admin-panel" style="margin-top: 15px; text-align: center;">
+  <div class="admin-panel" id="admin-panel" style="display: none; margin-top: 15px; text-align: center;">
     <button onclick="callNextNumber()" style="padding: 10px 18px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">ቁጥር ጥራ (Call)</button>
     <button onclick="resetGame()" style="padding: 10px 18px; background: #dc3545; color: white; border: none; border-radius: 6px; font-weight: bold; margin-left: 10px; cursor: pointer;">አዲስ ጨዋታ (Reset)</button>
   </div>
@@ -354,6 +354,8 @@
   // Initialization
   const tg = window.Telegram?.WebApp;
 
+ const ADMIN_ID = 407842423;
+
   function initApp() {
     if (tg) {
         tg.expand();
@@ -362,6 +364,11 @@
         if (user) {
             const nameElement = document.getElementById('player-name');
             if (nameElement) nameElement.innerText = `(${user.first_name})`;
+            
+            // የከፈተው ሰው ID 407842423 ከሆነ ብቻ የአድሚን በተኖቹን አሳይ
+            if (user.id === ADMIN_ID) {
+                document.getElementById('admin-panel').style.display = 'block';
+            }
         }
     }
     generateCard();
