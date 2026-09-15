@@ -117,8 +117,9 @@
   </div>
   
   <div class="admin-panel" id="admin-panel" style="display: none; margin-top: 15px; text-align: center;">
-    <button onclick="callNextNumber()" style="padding: 10px 18px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">ቁጥር ጥራ (Call)</button>
-    <button onclick="resetGame()" style="padding: 10px 18px; background: #dc3545; color: white; border: none; border-radius: 6px; font-weight: bold; margin-left: 10px; cursor: pointer;">አዲስ ጨዋታ (Reset)</button>
+    <button onclick="callNextNumber()" style="padding: 10px 12px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">ቁጥር ጥራ</button>
+    <button onclick="toggleAutoCall()" id="auto-btn" style="padding: 10px 12px; background: #ffc107; color: black; border: none; border-radius: 6px; font-weight: bold; margin-left: 5px; cursor: pointer; font-size: 13px;">አውቶ (Start Auto)</button>
+    <button onclick="resetGame()" style="padding: 10px 12px; background: #dc3545; color: white; border: none; border-radius: 6px; font-weight: bold; margin-left: 5px; cursor: pointer; font-size: 13px;">አዲስ ጨዋታ</button>
   </div>
   <br>
 
@@ -156,6 +157,8 @@
   let selectedIndices = new Set([12]);
   let previousLastNumber = null;
   let isMuted = false;
+  let autoCallInterval = null;
+  let isAutoRunning = false;
 
   function toggleSound() {
     isMuted = !isMuted;
@@ -221,7 +224,6 @@
 
       if (last !== undefined && last !== previousLastNumber) {
         speakNumber(last);
-        // የድምፅ ማጫወቻ ውጤት (Call Sound)
         if (!isMuted) {
           document.getElementById('call-sound').play().catch(() => {});
         }
@@ -324,7 +326,6 @@
 
       db.ref('currentGame/status').set('WON');
       
-      // የአሸናፊነት ድምፅ (Win Sound)
       if (!isMuted) {
         document.getElementById('win-sound').play().catch(() => {});
       }
@@ -345,7 +346,7 @@
     }
   }
 
-  // Admin controls
+  // Admin controls & Auto-call logic
   function callNextNumber() {
     const gameRef = db.ref('currentGame');
     gameRef.once('value', (snapshot) => {
@@ -353,7 +354,10 @@
       let called = data.calledNumbers || [];
       if (!Array.isArray(called)) called = Object.values(called);
 
-      if (called.length >= 75) return alert("ሁሉም ቁጥሮች ተጠርተዋል!");
+      if (called.length >= 75) {
+        stopAutoCall();
+        return alert("ሁሉም ቁጥሮች ተጠርተዋል!");
+      }
 
       let nextNum;
       do {
@@ -369,7 +373,36 @@
     });
   }
 
+  function toggleAutoCall() {
+    const autoBtn = document.getElementById('auto-btn');
+    if (!isAutoRunning) {
+      isAutoRunning = true;
+      autoBtn.style.background = '#fd7e14';
+      autoBtn.style.color = 'white';
+      autoBtn.innerText = 'አቁም (Stop)';
+
+      autoCallInterval = setInterval(() => {
+        callNextNumber();
+      }, 4000); // በየ 4 ሰኮንዱ ቁጥር በራሱ ይጠራል
+
+    } else {
+      stopAutoCall();
+    }
+  }
+
+  function stopAutoCall() {
+    isAutoRunning = false;
+    clearInterval(autoCallInterval);
+    const autoBtn = document.getElementById('auto-btn');
+    if (autoBtn) {
+      autoBtn.style.background = '#ffc107';
+      autoBtn.style.color = 'black';
+      autoBtn.innerText = 'አውቶ (Start Auto)';
+    }
+  }
+
   function resetGame() {
+    stopAutoCall();
     db.ref('currentGame').set({
         calledNumbers: [],
         lastCalled: '-',
