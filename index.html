@@ -96,7 +96,10 @@
       <div class="call-circle" id="last-num">-</div>
     </div>
   </div>
-
+<div class="admin-panel" style="margin-top: 15px; text-align: center;">
+    <button onclick="callNextNumber()" style="padding: 10px 18px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">ቁጥር ጥራ (Call)</button>
+    <button onclick="resetGame()" style="padding: 10px 18px; background: #dc3545; color: white; border: none; border-radius: 6px; font-weight: bold; margin-left: 10px; cursor: pointer;">አዲስ ጨዋታ (Reset)</button>
+</div>
   <div class="bingo-header">
     <div class="b-b">B</div><div class="b-i">I</div><div class="b-n">N</div><div class="b-g">G</div><div class="b-o">O</div>
   </div>
@@ -335,6 +338,20 @@ db.ref('currentGame/status').on('value', (snapshot) => {
     const status = snapshot.val() || 'WAIT';
     document.getElementById('game-status').innerText = status;
 });
+  // አድሚኑ አዲስ ቁጥር ሲጠራ
+function callNextNumber() {
+    const randomNum = Math.floor(Math.random() * 75) + 1; // ከ 1-75
+    db.ref('currentGame/lastCalled').set(randomNum);
+    db.ref('currentGame/status').set('STARTED');
+}
+
+// ጨዋታውን አዲስ ለማድረግ
+function resetGame() {
+    db.ref('currentGame').set({
+        lastCalled: '-',
+        status: 'WAIT'
+    };
+}
 </script>
 </body>
 </html>
