@@ -379,6 +379,12 @@ function resetGame() {
         status: 'WAIT'
     };
 }
+  document.addEventListener('DOMContentLoaded', function() {
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+    generateCard();
+});
 </script>
 </body>
 </html>
