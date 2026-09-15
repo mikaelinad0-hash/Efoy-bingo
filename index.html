@@ -25,7 +25,33 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin-bottom: 15px;
 }
+#card-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    min-height: 250px;
+}
 
+.card-cell {
+    background: #ffffff;
+    color: #333;
+    font-size: 18px;
+    font-weight: bold;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-cell.selected {
+    background: #28a745 !important;
+    color: white !important;
+}
 .brand-header {
   display: flex;
   align-items: center;
