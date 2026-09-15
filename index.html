@@ -350,7 +350,47 @@
         status: 'WAIT'
     }); // Fixed missing closing parenthesis here
   }
+function checkBingo() {
+    const gameRef = db.ref('currentGame');
 
+    gameRef.once('value').then((snapshot) => {
+      const data = snapshot.val() || {};
+      const calledNumbers = data.calledNumbers 
+        ? (Array.isArray(data.calledNumbers) ? data.calledNumbers : Object.values(data.calledNumbers)) 
+        : [];
+
+      // ተጫዋቹ በካርዱ ላይ የነካቸውን ቁጥሮች መሰብሰብ
+      const selectedElements = document.querySelectorAll('.card-cell.selected');
+      const selectedNumbers = Array.from(selectedElements).map(el => parseInt(el.innerText));
+
+      if (selectedNumbers.length < 5) {
+        alert("ቢያንስ 5 ቁጥሮች መምረጥ አለብህ!");
+        return;
+      }
+
+      // 1. የተመረጡት ቁጥሮች በሙሉ በአድሚኑ የተጠሩ መሆናቸውን ማረጋገጥ
+      const allValid = selectedNumbers.every(num => calledNumbers.includes(num));
+
+      if (!allValid) {
+        alert("❌ ገና ያልተጠራ ቁጥር መርጠሃል!");
+        return;
+      }
+
+      // 2. አሸናፊ ከሆነ በ Firebase ላይ ማወጅ
+      const playerName = tg.initDataUnsafe?.user?.first_name || "ተጫዋች";
+      
+      gameRef.update({
+        winner: playerName,
+        status: 'FINISHED'
+      });
+
+      // የደስታ አኒሜሽን (Confetti) ማሳየት
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      }
+      alert("🎉 BINGO! እንኳን ደስ አለህ አሸንፈሃል!");
+    });
+  }
   // Initialization
   const tg = window.Telegram?.WebApp;
 
