@@ -303,7 +303,7 @@ function triggerConfetti() {
     origin: { y: 0.6 }
   });
 }
-  generateCard();
+
   // ተጫዋቹ ቁጥር ሲነካ Haptic Feedback እንዲሰጠው ማድረግ
 function triggerHaptic() {
     if (window.Telegram?.WebApp?.HapticFeedback) {
@@ -314,6 +314,7 @@ function triggerHaptic() {
 const tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
+generateCard();
 
 const user = tg.initDataUnsafe?.user;
 if (user) {
