@@ -92,6 +92,10 @@
 </head>
 <body onclick="unlockAudio()">
 
+<!-- የድምፅ ፋይሎች (Audio Effects) -->
+<audio id="call-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+<audio id="win-sound" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" preload="auto"></audio>
+
 <div class="app-card">
   <div class="top-bar">
     <div class="brand-header">
@@ -217,6 +221,10 @@
 
       if (last !== undefined && last !== previousLastNumber) {
         speakNumber(last);
+        // የድምፅ ማጫወቻ ውጤት (Call Sound)
+        if (!isMuted) {
+          document.getElementById('call-sound').play().catch(() => {});
+        }
         previousLastNumber = last;
       }
     } else {
@@ -230,7 +238,6 @@
     }
   });
 
-  // Generates the numbers and stores them in userCard array
   function generateCard() {
     const ranges = [[1, 15], [16, 30], [31, 45], [46, 60], [61, 75]];
     let cols = [];
@@ -255,11 +262,10 @@
       }
     }
     
-    selectedIndices = new Set([12]); // Auto-select the FREE space
+    selectedIndices = new Set([12]);
     renderCard();
   }
 
-  // Renders the userCard array to the screen
   function renderCard() {
     const grid = document.getElementById('card-grid');
     if (!grid) return;
@@ -317,6 +323,11 @@
       });
 
       db.ref('currentGame/status').set('WON');
+      
+      // የአሸናፊነት ድምፅ (Win Sound)
+      if (!isMuted) {
+        document.getElementById('win-sound').play().catch(() => {});
+      }
       triggerConfetti();
     } else {
       msg.style.color = '#ef4444';
@@ -336,21 +347,37 @@
 
   // Admin controls
   function callNextNumber() {
-    const randomNum = Math.floor(Math.random() * 75) + 1;
-    db.ref('currentGame/lastCalled').set(randomNum);
-    db.ref('currentGame/status').set('STARTED');
-    
-    // Note: In a real environment, you need an array of 'calledNumbers' in Firebase. 
-    // This just sets a single 'lastCalled' value, but the listener expects an array to check history.
+    const gameRef = db.ref('currentGame');
+    gameRef.once('value', (snapshot) => {
+      const data = snapshot.val() || {};
+      let called = data.calledNumbers || [];
+      if (!Array.isArray(called)) called = Object.values(called);
+
+      if (called.length >= 75) return alert("ሁሉም ቁጥሮች ተጠርተዋል!");
+
+      let nextNum;
+      do {
+        nextNum = Math.floor(Math.random() * 75) + 1;
+      } while (called.includes(nextNum));
+
+      called.push(nextNum);
+      gameRef.update({
+        calledNumbers: called,
+        lastCalled: nextNum,
+        status: 'STARTED'
+      });
+    });
   }
 
   function resetGame() {
     db.ref('currentGame').set({
+        calledNumbers: [],
         lastCalled: '-',
         status: 'WAIT'
-    }); // Fixed missing closing parenthesis here
+    });
   }
-function checkBingo() {
+
+  function checkBingo() {
     const gameRef = db.ref('currentGame');
 
     gameRef.once('value').then((snapshot) => {
@@ -359,7 +386,6 @@ function checkBingo() {
         ? (Array.isArray(data.calledNumbers) ? data.calledNumbers : Object.values(data.calledNumbers)) 
         : [];
 
-      // ተጫዋቹ በካርዱ ላይ የነካቸውን ቁጥሮች መሰብሰብ
       const selectedElements = document.querySelectorAll('.card-cell.selected');
       const selectedNumbers = Array.from(selectedElements).map(el => parseInt(el.innerText));
 
@@ -368,7 +394,6 @@ function checkBingo() {
         return;
       }
 
-      // 1. የተመረጡት ቁጥሮች በሙሉ በአድሚኑ የተጠሩ መሆናቸውን ማረጋገጥ
       const allValid = selectedNumbers.every(num => calledNumbers.includes(num));
 
       if (!allValid) {
@@ -376,7 +401,6 @@ function checkBingo() {
         return;
       }
 
-      // 2. አሸናፊ ከሆነ በ Firebase ላይ ማወጅ
       const playerName = tg.initDataUnsafe?.user?.first_name || "ተጫዋች";
       
       gameRef.update({
@@ -384,17 +408,20 @@ function checkBingo() {
         status: 'FINISHED'
       });
 
-      // የደስታ አኒሜሽን (Confetti) ማሳየት
+      if (!isMuted) {
+        document.getElementById('win-sound').play().catch(() => {});
+      }
+
       if (typeof confetti === 'function') {
         confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
       }
       alert("🎉 BINGO! እንኳን ደስ አለህ አሸንፈሃል!");
     });
   }
+
   // Initialization
   const tg = window.Telegram?.WebApp;
-
- const ADMIN_ID = 407842423;
+  const ADMIN_ID = 407842423;
 
   function initApp() {
     if (tg) {
@@ -405,7 +432,6 @@ function checkBingo() {
             const nameElement = document.getElementById('player-name');
             if (nameElement) nameElement.innerText = `(${user.first_name})`;
             
-            // የከፈተው ሰው ID 407842423 ከሆነ ብቻ የአድሚን በተኖቹን አሳይ
             if (user.id === ADMIN_ID) {
                 document.getElementById('admin-panel').style.display = 'block';
             }
