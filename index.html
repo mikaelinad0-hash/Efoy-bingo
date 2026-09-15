@@ -269,27 +269,6 @@ function toggleSound() {
             cardGrid.appendChild(cell);
         }
     }
-}
-    }
-
-    for (let row = 0; row < 5; row++) {
-        for (let col = 0; col < 5; col++) {
-            const cell = document.createElement('div');
-            cell.className = 'card-cell';
-            
-            if (row === 2 && col === 2) {
-                cell.innerText = 'FREE';
-                cell.classList.add('selected');
-            } else {
-                cell.innerText = cols[col][row];
-                cell.onclick = function() {
-                    this.classList.toggle('selected');
-                };
-            }
-            cardGrid.appendChild(cell);
-        }
-    }
-}
   function renderCard() {
     const grid = document.getElementById('card-grid');
     if (!grid) return;
