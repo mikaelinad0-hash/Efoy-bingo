@@ -62,7 +62,7 @@
     .view-section { display: none; flex-direction: column; gap: 8px; flex: 1; }
     .view-section.active-view { display: flex; }
 
-    /* Main Game Area Tabs inside Game View */
+    /* Game Mode Tabs */
     .game-mode-tabs {
       display: flex;
       gap: 5px;
@@ -79,15 +79,13 @@
       font-weight: bold;
       cursor: pointer;
     }
-    .mode-tab.active-mode {
-      background: #4f46e5;
-    }
+    .mode-tab.active-mode { background: #4f46e5; }
 
     .sub-view { display: none; }
     .sub-view.active-sub { display: block; }
 
-    /* 1-100 Board Grid */
-    #board-100 {
+    /* 1-100 Cartella Selection Grid */
+    #cartella-grid-100 {
       display: grid !important;
       grid-template-columns: repeat(10, 1fr);
       gap: 3px;
@@ -95,8 +93,10 @@
       padding: 8px;
       border-radius: 10px;
       margin-bottom: 10px;
+      max-height: 280px;
+      overflow-y: auto;
     }
-    .board-cell {
+    .cartella-cell {
       background: rgba(255, 255, 255, 0.3);
       color: white;
       font-size: 11px;
@@ -106,14 +106,16 @@
       align-items: center;
       justify-content: center;
       border-radius: 4px;
+      cursor: pointer;
     }
-    .board-cell.called {
-      background: #f97316 !important;
+    .cartella-cell.selected {
+      background: #22c55e !important;
       color: white !important;
+      box-shadow: 0 0 5px #fff;
     }
 
-    /* Player Bingo Card (5x5) */
-    .bingo-card-container {
+    /* Selected Cartella 5x5 View */
+    .active-cartella-box {
       background: rgba(0, 0, 0, 0.25);
       padding: 10px;
       border-radius: 12px;
@@ -127,7 +129,7 @@
     .bingo-cell {
       background: rgba(255, 255, 255, 0.85);
       color: #1e1b4b;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
       aspect-ratio: 1;
       display: flex;
@@ -136,16 +138,15 @@
       border-radius: 6px;
       cursor: pointer;
       user-select: none;
-      transition: 0.2s;
     }
     .bingo-cell.marked {
-      background: #22c55e !important;
+      background: #f97316 !important;
       color: white !important;
     }
     .bingo-cell.free-space {
       background: #f59e0b;
       color: white;
-      font-size: 11px;
+      font-size: 10px;
     }
 
     /* Action Buttons */
@@ -167,7 +168,7 @@
     }
     .btn-refresh { background: #3b82f6; }
     .btn-start { background: #d97706; }
-    .btn-bingo { background: #ef4444; font-size: 15px; letter-spacing: 1px; }
+    .btn-bingo { background: #ef4444; font-size: 14px; }
 
     /* Admin Panel */
     .admin-panel {
@@ -262,29 +263,30 @@
     </div>
   </div>
 
-  <!-- 1. GAME VIEW (ዋናው የጨዋታ ገጽ) -->
+  <!-- 1. GAME VIEW -->
   <div id="view-game" class="view-section active-view">
     
-    <!-- Sub Mode Switcher (Board vs My Bingo Card) -->
+    <!-- Game Mode Tabs -->
     <div class="game-mode-tabs">
-      <button class="mode-tab active-mode" onclick="switchGameMode('board', this)">ቁጥሮች (1-100)</button>
-      <button class="mode-tab" onclick="switchGameMode('card', this)">የእኔ ቢንጎ ካርድ 🎫</button>
+      <button class="mode-tab active-mode" id="tab-selector" onclick="switchGameMode('selector', this)">የካርቴላ ምርጫ (1-100)</button>
+      <button class="mode-tab" id="tab-card" onclick="switchGameMode('card', this)">የተመረጠው ካርድ 🎫</button>
     </div>
 
-    <!-- Mode 1: 1-100 Called Board -->
-    <div id="sub-board" class="sub-view active-sub">
-      <div id="board-100"></div>
+    <!-- Mode 1: 1-100 Cartella Selection Grid -->
+    <div id="sub-selector" class="sub-view active-sub">
+      <div style="font-size: 11px; margin-bottom: 4px; color: #fde047; font-weight: bold;">የሚፈልጉትን የካርቴላ ቁጥር ይምረጡ (ከ 1 - 100):</div>
+      <div id="cartella-grid-100"></div>
     </div>
 
-    <!-- Mode 2: Player Bingo Card -->
+    <!-- Mode 2: Active Cartella 5x5 Grid View -->
     <div id="sub-card" class="sub-view">
-      <div class="bingo-card-container">
+      <div class="active-cartella-box">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-size: 12px; font-weight: bold; color: #fde047;">የእርስዎ የቢንጎ ካርድ</span>
-          <button onclick="generateNewCard()" style="background: #2563eb; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">ካርድ ቀይር</button>
+          <span style="font-size: 12px; font-weight: bold; color: #fde047;" id="current-cartella-title">የካርቴላ ቁጥር: #1</span>
+          <span style="font-size: 10px; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">አድሚን የሚጠራውን ቁጥር ይጫኑ</span>
         </div>
-        <div class="bingo-grid" id="player-bingo-grid">
-          <!-- Dynamically generated 25 cells -->
+        <div class="bingo-grid" id="active-cartella-grid">
+          <!-- 5x5 generated numbers -->
         </div>
       </div>
       <button class="action-row btn-action btn-bingo" onclick="checkBingoWin()">🎉 BINGO! (አሸነፍኩ)</button>
@@ -300,7 +302,7 @@
 
     <div class="action-row">
       <button class="btn-action btn-refresh" onclick="location.reload()">Refresh</button>
-      <button class="btn-action btn-start" id="start-btn" onclick="startGameSession()">Start Game</button>
+      <button class="btn-action btn-start" id="start-btn" onclick="startPlayerGame()">Start Game</button>
     </div>
   </div>
 
@@ -371,6 +373,7 @@
   const db = firebase.database();
 
   let calledNumbers = [];
+  let currentSelectedCartella = 1;
   let isMuted = false;
   let autoCallInterval = null;
   let isAutoRunning = false;
@@ -390,53 +393,75 @@
     if ('speechSynthesis' in window) window.speechSynthesis.resume();
   }
 
-  // Switch Bottom Navigation Views
   function switchView(viewName, element) {
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
     document.querySelectorAll('.bottom-nav .nav-item').forEach(el => el.classList.remove('active'));
-
     document.getElementById(`view-${viewName}`).classList.add('active-view');
     element.classList.add('active');
   }
 
-  // Switch Inner Game Modes (Board vs Card)
   function switchGameMode(mode, element) {
     document.querySelectorAll('.sub-view').forEach(el => el.classList.remove('active-sub'));
     document.querySelectorAll('.game-mode-tabs .mode-tab').forEach(el => el.classList.remove('active-mode'));
-
     document.getElementById(`sub-${mode}`).classList.add('active-sub');
     element.classList.add('active-mode');
   }
 
-  // Build 1-100 Board
-  const boardEl = document.getElementById('board-100');
+  // Build 1-100 Cartella Grid Selector
+  const cartellaGridEl = document.getElementById('cartella-grid-100');
   for (let i = 1; i <= 100; i++) {
     let cell = document.createElement('div');
-    cell.className = 'board-cell';
-    cell.id = `cell-${i}`;
+    cell.className = 'cartella-cell';
+    cell.id = `cartella-btn-${i}`;
     cell.innerText = i;
-    boardEl.appendChild(cell);
+    if (i === currentSelectedCartella) cell.classList.add('selected');
+    
+    cell.onclick = () => {
+      document.querySelectorAll('.cartella-cell').forEach(c => c.classList.remove('selected'));
+      cell.classList.add('selected');
+      currentSelectedCartella = i;
+      loadCartellaNumbers(i);
+    };
+    cartellaGridEl.appendChild(cell);
   }
 
-  // Generate Player 5x5 Bingo Card
-  let playerCardNumbers = [];
-  function generateNewCard() {
-    playerCardNumbers = [];
-    let available = [];
-    for (let i = 1; i <= 75; i++) available.push(i);
-    // Shuffle and pick 24 numbers (since center is FREE)
-    available.sort(() => Math.random() - 0.5);
-    playerCardNumbers = available.slice(0, 24);
-    playerCardNumbers.splice(12, 0, "FREE"); // Middle spot
-
-    renderPlayerCard();
+  // Start button action: Takes user to the selected card view
+  function startPlayerGame() {
+    loadCartellaNumbers(currentSelectedCartella);
+    switchGameMode('card', document.getElementById('tab-card'));
+    db.ref('currentGame').update({ status: 'STARTED' });
   }
 
-  function renderPlayerCard() {
-    const gridEl = document.getElementById('player-bingo-grid');
+  // Generate 5x5 numbers deterministically based on Cartella ID
+  let activeCartellaNumbers = [];
+  function loadCartellaNumbers(cartellaId) {
+    document.getElementById('current-cartella-title').innerText = `የካርቴላ ቁጥር: #${cartellaId}`;
+    activeCartellaNumbers = [];
+    
+    let seed = cartellaId * 997;
+    let pseudoRandom = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+
+    let pool = [];
+    for (let i = 1; i <= 100; i++) pool.push(i);
+    for (let i = pool.length - 1; i > 0; i--) {
+      let j = Math.floor(pseudoRandom() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+
+    activeCartellaNumbers = pool.slice(0, 24);
+    activeCartellaNumbers.splice(12, 0, "FREE");
+
+    renderActiveCartellaGrid();
+  }
+
+  function renderActiveCartellaGrid() {
+    const gridEl = document.getElementById('active-cartella-grid');
     gridEl.innerHTML = '';
     
-    playerCardNumbers.forEach((num, index) => {
+    activeCartellaNumbers.forEach((num) => {
       let cell = document.createElement('div');
       cell.className = 'bingo-cell';
       if (num === "FREE") {
@@ -445,11 +470,16 @@
       } else {
         cell.innerText = num;
         cell.id = `card-cell-${num}`;
+        
+        if (calledNumbers.includes(num)) {
+          // keep marked state if needed
+        }
+
         cell.onclick = () => {
           if (calledNumbers.includes(num)) {
             cell.classList.toggle('marked');
           } else {
-            alert(`ቁጥር ${num} ገና አልተጠራም!`);
+            alert(`ቁጥር ${num} በዚህ ጨዋታ ገና አልተጠራም!`);
           }
         };
       }
@@ -457,11 +487,9 @@
     });
   }
 
-  // Check Bingo Win Condition
   function checkBingoWin() {
-    // Simple check: check if center and at least 4 marked numbers around are called/marked
     let markedCount = 0;
-    playerCardNumbers.forEach(num => {
+    activeCartellaNumbers.forEach(num => {
       if (num === "FREE") return;
       let el = document.getElementById(`card-cell-${num}`);
       if (el && el.classList.contains('marked')) {
@@ -470,17 +498,16 @@
     });
 
     if (markedCount >= 5) {
-      // Trigger Winner Celebration!
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
       document.getElementById('win-sound').play().catch(() => {});
       
       let userName = tg?.initDataUnsafe?.user?.first_name || "ተጫዋች";
       db.ref('winners').push({
-        name: userName,
+        name: `${userName} (ካርቴላ #${currentSelectedCartella})`,
         claimedAt: new Date().toLocaleTimeString()
       });
 
-      alert("🎉 እንኳን ደስ አሎት! BINGO አሸንፈዋል!");
+      alert(`🎉 እንኳን ደስ አሎት! በካርቴላ #${currentSelectedCartella} BINGO አሸንፈዋል!`);
     } else {
       alert("ገና በቂ ቁጥሮች አልሞሉም! (ቢያንስ 5 ቁጥሮች መሞላት አለባቸው)");
     }
@@ -503,14 +530,6 @@
 
     if (data.calledNumbers) {
       calledNumbers = Array.isArray(data.calledNumbers) ? data.calledNumbers : Object.values(data.calledNumbers);
-      
-      for (let i = 1; i <= 100; i++) {
-        let el = document.getElementById(`cell-${i}`);
-        if (el) {
-          if (calledNumbers.includes(i)) el.classList.add('called');
-          else el.classList.remove('called');
-        }
-      }
 
       let last = calledNumbers[calledNumbers.length - 1];
       if (last !== undefined && last !== previousLastNumber) {
@@ -521,14 +540,9 @@
     } else {
       calledNumbers = [];
       previousLastNumber = null;
-      for (let i = 1; i <= 100; i++) {
-        let el = document.getElementById(`cell-${i}`);
-        if (el) el.classList.remove('called');
-      }
     }
   });
 
-  // Listen to Winners for Scores Tab
   db.ref('winners').on('value', snapshot => {
     const winnersData = snapshot.val();
     const scoresContainer = document.getElementById('scores-list-container');
@@ -549,7 +563,6 @@
     });
   });
 
-  // Active Players Presence
   const myPresenceRef = db.ref('activePlayers').push();
   myPresenceRef.onDisconnect().remove();
   const currentUserName = tg?.initDataUnsafe?.user?.first_name || "ተጫዋች";
@@ -560,11 +573,6 @@
     const countEl = document.getElementById('active-players-count');
     if (countEl) countEl.innerText = activeData ? Object.keys(activeData).length : 1;
   });
-
-  function startGameSession() {
-    db.ref('currentGame').update({ status: 'STARTED' });
-    alert("ጨዋታው ተጀምሯል!");
-  }
 
   function callNextNumber() {
     db.ref('currentGame').once('value', snapshot => {
@@ -592,7 +600,6 @@
     });
   }
 
-  // Listen to History Tab Data
   db.ref('gameHistory').on('value', snapshot => {
     const historyData = snapshot.val();
     const historyContainer = document.getElementById('history-list-container');
@@ -635,7 +642,7 @@
 
   function initApp() {
     updateCoinsDisplay();
-    generateNewCard(); // Generate initial player bingo card
+    loadCartellaNumbers(1);
     if (tg) {
       tg.expand();
       tg.ready();
