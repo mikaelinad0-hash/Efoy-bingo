@@ -13,7 +13,7 @@
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #9c82bc; margin: 0; padding: 0; display: flex; justify-content: center; }
-    .app-card { background: #9c82bc; width: 100%; max-width: 420px; min-height: 100vh; padding: 10px 10px 70px 10px; color: white; display: flex; flex-direction: column; }
+    .app-card { background: #9c82bc; width: 100%; max-width: 420px; min-height: 100vh; padding: 10px 10px 75px 10px; color: white; display: flex; flex-direction: column; }
     
     /* Top Stat Bars */
     .top-stats {
@@ -23,7 +23,7 @@
       margin-bottom: 8px;
     }
     .stat-box {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.9);
       color: #333;
       padding: 6px 2px;
       border-radius: 8px;
@@ -36,7 +36,7 @@
 
     /* Jackpot Box */
     .jackpot-container {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.9);
       padding: 8px 12px;
       border-radius: 8px;
       color: #333;
@@ -54,7 +54,7 @@
     .jackpot-bar-fill {
       background: #f59e0b;
       height: 100%;
-      width: 40%;
+      width: 65%;
       border-radius: 4px;
     }
 
@@ -63,7 +63,7 @@
       display: grid !important;
       grid-template-columns: repeat(10, 1fr);
       gap: 3px;
-      background: rgba(0,0,0,0.15);
+      background: rgba(0,0,0,0.2);
       padding: 8px;
       border-radius: 10px;
       margin-bottom: 10px;
@@ -104,17 +104,14 @@
     .btn-refresh { background: #3b82f6; }
     .btn-start { background: #d97706; }
 
-    /* Game Hash Box */
-    .hash-box {
-      background: rgba(255, 255, 255, 0.9);
-      color: #333;
+    /* Admin Panel */
+    .admin-panel {
+      background: rgba(0, 0, 0, 0.3);
       padding: 8px;
       border-radius: 8px;
-      text-align: center;
-      font-size: 10px;
       margin-bottom: 10px;
+      text-align: center;
     }
-    .hash-box strong { display: block; font-size: 11px; margin-bottom: 3px; color: #4f46e5; }
 
     /* Bottom Navigation Bar */
     .bottom-nav {
@@ -140,15 +137,6 @@
     }
     .nav-item.active { color: #4f46e5; }
     .nav-item span:first-child { font-size: 18px; margin-bottom: 2px; }
-
-    /* Admin Panel */
-    .admin-panel {
-      background: rgba(0, 0, 0, 0.25);
-      padding: 8px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      text-align: center;
-    }
   </style>
 </head>
 <body onclick="unlockAudio()">
@@ -157,19 +145,19 @@
 <audio id="win-sound" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" preload="auto"></audio>
 
 <div class="app-card">
-  <!-- Top Stats Bar -->
+  <!-- Top Stats Bar (ይህንን ከእኛ የሳንቲም እና የጨዋታ ሁኔታ ጋር አስተካክለነዋል) -->
   <div class="top-stats">
-    <div class="stat-box">Wallet <span id="wallet-val">19.5</span></div>
-    <div class="stat-box">Bonus <span id="bonus-val">6</span></div>
-    <div class="stat-box">Active Game <span id="active-game-val">1</span></div>
-    <div class="stat-box">Stake <span id="stake-val">10</span></div>
+    <div class="stat-box">🪙 Wallet <span id="wallet-coins">1000</span></div>
+    <div class="stat-box">🎁 Bonus <span id="bonus-val">50</span></div>
+    <div class="stat-box">🟢 Active <span id="active-players-count">1</span></div>
+    <div class="stat-box">💎 Stake <span id="stake-val">10</span></div>
   </div>
 
   <!-- Jackpot Container -->
   <div class="jackpot-container">
     <div style="display: flex; justify-content: space-between;">
-      <span>JACKPOT</span>
-      <span id="jackpot-text">405.4 / 1000</span>
+      <span>JACKPOT (እፎይ ጃክፖት)</span>
+      <span id="jackpot-text">650 / 1000</span>
     </div>
     <div class="jackpot-bar-bg">
       <div class="jackpot-bar-fill" id="jackpot-bar"></div>
@@ -191,12 +179,6 @@
   <div class="action-row">
     <button class="btn-action btn-refresh" onclick="location.reload()">Refresh</button>
     <button class="btn-action btn-start" id="start-btn" onclick="startGameSession()">Start Game</button>
-  </div>
-
-  <!-- Game Hash (Fairness) -->
-  <div class="hash-box">
-    <strong>GAME HASH (FAIRNESS)</strong>
-    <span style="font-size: 9px; opacity: 0.8; word-break: break-all;" id="game-hash-id">ID: PS9731<br>cba00fb6c22836810577649dede39483849f5149b7c4696ca6aa633bcd78d781</span>
   </div>
 </div>
 
@@ -228,6 +210,13 @@
   let autoCallInterval = null;
   let isAutoRunning = false;
   let previousLastNumber = null;
+
+  // Player Coins System
+  let playerCoins = parseInt(localStorage.getItem('efoy_coins')) || 1000;
+  function updateCoinsDisplay() {
+    document.getElementById('wallet-coins').innerText = playerCoins;
+    localStorage.setItem('efoy_coins', playerCoins);
+  }
 
   const tg = window.Telegram?.WebApp;
   const ADMIN_ID = 407842423;
@@ -288,6 +277,17 @@
     }
   });
 
+  // Active Players Presence
+  const myPresenceRef = db.ref('activePlayers').push();
+  myPresenceRef.onDisconnect().remove();
+  myPresenceRef.set({ name: tg?.initDataUnsafe?.user?.first_name || "ተጫዋች", time: firebase.database.ServerValue.TIMESTAMP });
+
+  db.ref('activePlayers').on('value', snapshot => {
+    const activeData = snapshot.val();
+    const countEl = document.getElementById('active-players-count');
+    if (countEl) countEl.innerText = activeData ? Object.keys(activeData).length : 1;
+  });
+
   function startGameSession() {
     db.ref('currentGame').update({ status: 'STARTED' });
     alert("ጨዋታው ተጀምሯል!");
@@ -334,6 +334,7 @@
   }
 
   function initApp() {
+    updateCoinsDisplay();
     if (tg) {
       tg.expand();
       tg.ready();
