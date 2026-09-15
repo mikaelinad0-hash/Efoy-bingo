@@ -301,6 +301,12 @@ function triggerConfetti() {
   });
 }
   generateCard();
+  // ተጫዋቹ ቁጥር ሲነካ Haptic Feedback እንዲሰጠው ማድረግ
+function triggerHaptic() {
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+}
   // Telegram WebApp initialization
 const tg = window.Telegram.WebApp;
 tg.expand();
@@ -313,6 +319,22 @@ if (user) {
    nameElement.innerText = `(${user.first_name})`;
     }
 }
+  // Firebase Realtime Syncing
+db.ref('currentGame/lastCalled').on('value', (snapshot) => {
+    const lastNum = snapshot.val();
+    if (lastNum) {
+        document.getElementById('last-num').innerText = lastNum;
+        const boardCell = document.getElementById(`board-num-${lastNum}`);
+        if (boardCell) {
+            boardCell.classList.add('called');
+        }
+    }
+});
+
+db.ref('currentGame/status').on('value', (snapshot) => {
+    const status = snapshot.val() || 'WAIT';
+    document.getElementById('game-status').innerText = status;
+});
 </script>
 </body>
 </html>
