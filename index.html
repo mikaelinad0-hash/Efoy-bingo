@@ -88,6 +88,12 @@
     #msg { text-align: center; font-weight: bold; margin-top: 8px; min-height: 24px; font-size: 14px; }
     
     .sound-notice { text-align: center; font-size: 12px; color: #fde047; margin-bottom: 8px; cursor: pointer; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 4px; }
+    
+    /* Leaderboard Styling */
+    .leaderboard-box { background: #4e4693; border-radius: 10px; padding: 10px; margin-top: 15px; }
+    .leaderboard-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; color: #fde047; }
+    .winner-list { max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+    .winner-item { background: rgba(255, 255, 255, 0.1); padding: 6px 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
   </style>
 </head>
 <body onclick="unlockAudio()">
@@ -129,13 +135,21 @@
 
   <div class="player-card" id="card-grid"></div>
   
-  <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
+  <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; margin-top: 10px;">
     <button id="sound-btn" onclick="toggleSound()" style="background: #6366f1; color: white; padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer;">🔊 Sound: ON</button>
     <button onclick="generateCard()" style="background: #0ea5e9; color: white; padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer;">🔄 New Card</button>
   </div>
   
   <button class="btn-claim" onclick="claimBingo()">BINGO!</button>
   <div id="msg"></div>
+
+  <!-- የአሸናፊዎች መዝገብ (Leaderboard Section) -->
+  <div class="leaderboard-box">
+    <div class="leaderboard-title">🏆 የቅርብ ጊዜ አሸናፊዎች (Winners)</div>
+    <div class="winner-list" id="winner-list">
+      <div style="text-align: center; font-size: 12px; opacity: 0.7; padding: 10px;">አሸናፊዎች እስካሁን የሉም...</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -240,6 +254,27 @@
     }
   });
 
+  // Winners Listener (Leaderboard)
+  db.ref('winners').on('value', snapshot => {
+    const winnersData = snapshot.val();
+    const listEl = document.getElementById('winner-list');
+    if (!listEl) return;
+
+    listEl.innerHTML = '';
+    if (!winnersData) {
+      listEl.innerHTML = '<div style="text-align: center; font-size: 12px; opacity: 0.7; padding: 10px;">አሸናፊዎች እስካሁን የሉም...</div>';
+      return;
+    }
+
+    let winnersArray = Object.values(winnersData).reverse(); // የቅርብ ጊዜውን ከላይ ለማሳየት
+    winnersArray.forEach(w => {
+      let item = document.createElement('div');
+      item.className = 'winner-item';
+      item.innerHTML = `<span>👤 <strong>${w.name}</strong></span> <span style="font-size: 11px; opacity: 0.8;">🕒 ${w.claimedAt}</span>`;
+      listEl.appendChild(item);
+    });
+  });
+
   function generateCard() {
     const ranges = [[1, 15], [16, 30], [31, 45], [46, 60], [61, 75]];
     let cols = [];
@@ -316,12 +351,22 @@
       msg.innerText = '🎉 እንኳን ደስ አለህ! BINGO አሸንፈሃል!';
       
       const playerSelectedNumbers = Array.from(selectedIndices).map(idx => userCard[idx]);
+      const playerName = tg.initDataUnsafe?.user?.first_name || "ተጫዋች";
+      const currentTime = new Date().toLocaleTimeString();
 
+      // Update current game winner node
       db.ref('currentGame/winner').set({
+        name: playerName,
         fullCard: userCard,
         selectedNumbers: playerSelectedNumbers,
-        claimedAt: new Date().toLocaleTimeString(),
+        claimedAt: currentTime,
         status: 'CLAIMED'
+      });
+
+      // Push to persistent winners list (Leaderboard)
+      db.ref('winners').push({
+        name: playerName,
+        claimedAt: currentTime
       });
 
       db.ref('currentGame/status').set('WON');
