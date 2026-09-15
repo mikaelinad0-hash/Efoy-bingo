@@ -82,6 +82,7 @@
   <div class="brand-header">
     <div class="brand-logo">🎯</div>
     <span class="brand-title">እፎይ Bingo</span>
+    <span id="player-name" style="font-size: 12px; opacity: 0.85; margin-left: 6px;"></span>
   </div>
   <span><strong id="game-status">WAIT</strong></span>
 </div>
@@ -307,8 +308,10 @@ tg.ready();
 
 const user = tg.initDataUnsafe?.user;
 if (user) {
-    console.log("Player Name:", user.first_name);
-    console.log("Player ID:", user.id);
+    const nameElement = document.getElementById('player-name');
+    if (nameElement) {
+   nameElement.innerText = `(${user.first_name})`;
+    }
 }
 </script>
 </body>
