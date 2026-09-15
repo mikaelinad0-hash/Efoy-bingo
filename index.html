@@ -58,6 +58,10 @@
       border-radius: 4px;
     }
 
+    /* Views Containers */
+    .view-section { display: none; flex-direction: column; gap: 8px; flex: 1; }
+    .view-section.active-view { display: flex; }
+
     /* 1-100 Board Grid */
     #board-100 {
       display: grid !important;
@@ -113,6 +117,39 @@
       text-align: center;
     }
 
+    /* Scores & History Lists Style */
+    .panel-card-box {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .panel-title {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #fde047;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .list-container {
+      max-height: 350px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .list-item {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
     /* Bottom Navigation Bar */
     .bottom-nav {
       position: fixed;
@@ -145,7 +182,7 @@
 <audio id="win-sound" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" preload="auto"></audio>
 
 <div class="app-card">
-  <!-- Top Stats Bar (ይህንን ከእኛ የሳንቲም እና የጨዋታ ሁኔታ ጋር አስተካክለነዋል) -->
+  <!-- Top Stats Bar -->
   <div class="top-stats">
     <div class="stat-box">🪙 Wallet <span id="wallet-coins">1000</span></div>
     <div class="stat-box">🎁 Bonus <span id="bonus-val">50</span></div>
@@ -164,31 +201,74 @@
     </div>
   </div>
 
-  <!-- 1-100 Board -->
-  <div id="board-100"></div>
+  <!-- 1. GAME VIEW (ዋናው የጨዋታ ገጽ) -->
+  <div id="view-game" class="view-section active-view">
+    <div id="board-100"></div>
 
-  <!-- Admin Panel (ለአድሚን ብቻ የሚታይ) -->
-  <div class="admin-panel" id="admin-panel" style="display: none;">
-    <div style="font-size: 11px; color: #fde047; margin-bottom: 5px; font-weight: bold;">👑 አድሚን መቆጣጠሪያ</div>
-    <button onclick="callNextNumber()" style="padding: 6px 10px; background: #22c55e; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 11px;">ቁጥር ጥራ</button>
-    <button onclick="toggleAutoCall()" id="auto-btn" style="padding: 6px 10px; background: #eab308; color: black; border: none; border-radius: 5px; font-weight: bold; margin-left: 4px; cursor: pointer; font-size: 11px;">አውቶ</button>
-    <button onclick="resetGame()" style="padding: 6px 10px; background: #ef4444; color: white; border: none; border-radius: 5px; font-weight: bold; margin-left: 4px; cursor: pointer; font-size: 11px;">አዲስ</button>
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="admin-panel" style="display: none;">
+      <div style="font-size: 11px; color: #fde047; margin-bottom: 5px; font-weight: bold;">👑 አድሚን መቆጣጠሪያ</div>
+      <button onclick="callNextNumber()" style="padding: 6px 10px; background: #22c55e; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 11px;">ቁጥር ጥራ</button>
+      <button onclick="toggleAutoCall()" id="auto-btn" style="padding: 6px 10px; background: #eab308; color: black; border: none; border-radius: 5px; font-weight: bold; margin-left: 4px; cursor: pointer; font-size: 11px;">አውቶ</button>
+      <button onclick="resetGame()" style="padding: 6px 10px; background: #ef4444; color: white; border: none; border-radius: 5px; font-weight: bold; margin-left: 4px; cursor: pointer; font-size: 11px;">አዲስ</button>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-action btn-refresh" onclick="location.reload()">Refresh</button>
+      <button class="btn-action btn-start" id="start-btn" onclick="startGameSession()">Start Game</button>
+    </div>
   </div>
 
-  <!-- Action Buttons -->
-  <div class="action-row">
-    <button class="btn-action btn-refresh" onclick="location.reload()">Refresh</button>
-    <button class="btn-action btn-start" id="start-btn" onclick="startGameSession()">Start Game</button>
+  <!-- 2. SCORES VIEW (የአሸናፊዎች ውጤቶች) -->
+  <div id="view-scores" class="view-section">
+    <div class="panel-card-box">
+      <div class="panel-title">🏆 የውጤቶች ሰሌዳ (Scores & Winners)</div>
+      <div class="list-container" id="scores-list-container">
+        <div style="text-align: center; font-size: 12px; opacity: 0.7; padding: 20px;">አሸናፊዎች እስካሁን አልተመዘገቡም...</div>
+      </div>
+    </div>
   </div>
+
+  <!-- 3. HISTORY VIEW (የጨዋታ ታሪክ) -->
+  <div id="view-history" class="view-section">
+    <div class="panel-card-box">
+      <div class="panel-title">🕒 የጨዋታ ታሪክ (Game History)</div>
+      <div class="list-container" id="history-list-container">
+        <div style="text-align: center; font-size: 12px; opacity: 0.7; padding: 20px;">የጨዋታ ታሪክ ባዶ ነው።</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. WALLET VIEW -->
+  <div id="view-wallet" class="view-section">
+    <div class="panel-card-box" style="text-align: center; padding: 30px 10px;">
+      <div style="font-size: 35px; margin-bottom: 10px;">🪙</div>
+      <div style="font-size: 14px; opacity: 0.8;">የእርስዎ የሳንቲም መጠን (Wallet Balance)</div>
+      <div style="font-size: 28px; font-weight: bold; color: #fde047; margin-top: 5px;" id="wallet-display-num">1000 🪙</div>
+    </div>
+  </div>
+
+  <!-- 5. PROFILE VIEW -->
+  <div id="view-profile" class="view-section">
+    <div class="panel-card-box">
+      <div class="panel-title">👤 የተጫዋች መረጃ (Profile)</div>
+      <div style="font-size: 14px; line-height: 1.8;">
+        <div>ስም: <strong id="profile-name">-</strong></div>
+        <div>መታወቂያ (ID): <strong id="profile-id">-</strong></div>
+        <div>ሁኔታ: <span style="color: #22c55e; font-weight: bold;">🟢 ንቁ (Active)</span></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Bottom Navigation Bar -->
 <div class="bottom-nav">
-  <div class="nav-item active"><span>🎮</span><span>Game</span></div>
-  <div class="nav-item" onclick="alert('Scores ክፍል በሂደት ላይ ነው')"><span>🏆</span><span>Scores</span></div>
-  <div class="nav-item" onclick="alert('History ክፍል በሂደት ላይ ነው')"><span>🕒</span><span>History</span></div>
-  <div class="nav-item" onclick="alert('Wallet ክፍል በሂደት ላይ ነው')"><span>🪙</span><span>Wallet</span></div>
-  <div class="nav-item" onclick="alert('Profile ክፍል በሂደት ላይ ነው')"><span>👤</span><span>Profile</span></div>
+  <div class="nav-item active" onclick="switchView('game', this)"><span>🎮</span><span>Game</span></div>
+  <div class="nav-item" onclick="switchView('scores', this)"><span>🏆</span><span>Scores</span></div>
+  <div class="nav-item" onclick="switchView('history', this)"><span>🕒</span><span>History</span></div>
+  <div class="nav-item" onclick="switchView('wallet', this)"><span>🪙</span><span>Wallet</span></div>
+  <div class="nav-item" onclick="switchView('profile', this)"><span>👤</span><span>Profile</span></div>
 </div>
 
 <script>
@@ -211,10 +291,10 @@
   let isAutoRunning = false;
   let previousLastNumber = null;
 
-  // Player Coins System
   let playerCoins = parseInt(localStorage.getItem('efoy_coins')) || 1000;
   function updateCoinsDisplay() {
     document.getElementById('wallet-coins').innerText = playerCoins;
+    document.getElementById('wallet-display-num').innerText = playerCoins + " 🪙";
     localStorage.setItem('efoy_coins', playerCoins);
   }
 
@@ -223,6 +303,15 @@
 
   function unlockAudio() {
     if ('speechSynthesis' in window) window.speechSynthesis.resume();
+  }
+
+  // Switch Bottom Navigation Views
+  function switchView(viewName, element) {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(el => el.classList.remove('active'));
+
+    document.getElementById(`view-${viewName}`).classList.add('active-view');
+    element.classList.add('active');
   }
 
   // Build 1-100 Board
@@ -277,10 +366,32 @@
     }
   });
 
+  // Listen to Winners for Scores Tab
+  db.ref('winners').on('value', snapshot => {
+    const winnersData = snapshot.val();
+    const scoresContainer = document.getElementById('scores-list-container');
+    if (!scoresContainer) return;
+
+    scoresContainer.innerHTML = '';
+    if (!winnersData) {
+      scoresContainer.innerHTML = '<div style="text-align: center; font-size: 12px; opacity: 0.7; padding: 20px;">አሸናፊዎች እስካሁን አልተመዘገቡም...</div>';
+      return;
+    }
+
+    let winnersArray = Object.values(winnersData).reverse();
+    winnersArray.forEach(w => {
+      let item = document.createElement('div');
+      item.className = 'list-item';
+      item.innerHTML = `<span>🏆 <strong>${w.name}</strong></span> <span style="font-size: 11px; opacity: 0.8;">🕒 ${w.claimedAt}</span>`;
+      scoresContainer.appendChild(item);
+    });
+  });
+
   // Active Players Presence
   const myPresenceRef = db.ref('activePlayers').push();
   myPresenceRef.onDisconnect().remove();
-  myPresenceRef.set({ name: tg?.initDataUnsafe?.user?.first_name || "ተጫዋች", time: firebase.database.ServerValue.TIMESTAMP });
+  const currentUserName = tg?.initDataUnsafe?.user?.first_name || "ተጫዋች";
+  myPresenceRef.set({ name: currentUserName, time: firebase.database.ServerValue.TIMESTAMP });
 
   db.ref('activePlayers').on('value', snapshot => {
     const activeData = snapshot.val();
@@ -311,8 +422,35 @@
 
       called.push(nextNum);
       db.ref('currentGame').update({ calledNumbers: called, status: 'STARTED' });
+
+      // Add to History list
+      db.ref('gameHistory').push({
+        calledNumber: nextNum,
+        time: new Date().toLocaleTimeString()
+      });
     });
   }
+
+  // Listen to History Tab Data
+  db.ref('gameHistory').on('value', snapshot => {
+    const historyData = snapshot.val();
+    const historyContainer = document.getElementById('history-list-container');
+    if (!historyContainer) return;
+
+    historyContainer.innerHTML = '';
+    if (!historyData) {
+      historyContainer.innerHTML = '<div style="text-align: center; font-size: 12px; opacity: 0.7; padding: 20px;">የጨዋታ ታሪክ ባዶ ነው።</div>';
+      return;
+    }
+
+    let historyArray = Object.values(historyData).reverse();
+    historyArray.forEach(h => {
+      let item = document.createElement('div');
+      item.className = 'list-item';
+      item.innerHTML = `<span>🎲 ቁጥር ተጠርቷል: <strong style="color: #fde047; font-size: 15px;">${h.calledNumber}</strong></span> <span style="font-size: 11px; opacity: 0.8;">🕒 ${h.time}</span>`;
+      historyContainer.appendChild(item);
+    });
+  });
 
   function toggleAutoCall() {
     const btn = document.getElementById('auto-btn');
@@ -331,6 +469,7 @@
     isAutoRunning = false;
     clearInterval(autoCallInterval);
     db.ref('currentGame').set({ calledNumbers: [], status: 'WAIT' });
+    db.ref('gameHistory').remove();
   }
 
   function initApp() {
@@ -338,8 +477,13 @@
     if (tg) {
       tg.expand();
       tg.ready();
-      if (tg.initDataUnsafe?.user?.id === ADMIN_ID) {
-        document.getElementById('admin-panel').style.display = 'block';
+      const user = tg.initDataUnsafe?.user;
+      if (user) {
+        document.getElementById('profile-name').innerText = user.first_name || "არታወቀም";
+        document.getElementById('profile-id').innerText = user.id || "-";
+        if (user.id === ADMIN_ID) {
+          document.getElementById('admin-panel').style.display = 'block';
+        }
       }
     }
   }
