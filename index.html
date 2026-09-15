@@ -12,171 +12,201 @@
   
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #7b73c2; margin: 0; padding: 10px; display: flex; justify-content: center; }
-    .app-card { background: #5c53a6; width: 100%; max-width: 420px; border-radius: 16px; padding: 12px; color: white; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    body { background-color: #9c82bc; margin: 0; padding: 0; display: flex; justify-content: center; }
+    .app-card { background: #9c82bc; width: 100%; max-width: 420px; min-height: 100vh; padding: 10px 10px 70px 10px; color: white; display: flex; flex-direction: column; }
     
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 18px;
-      background: linear-gradient(135deg, #4f46e5, #3b82f6);
-      color: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      margin-bottom: 12px;
+    /* Top Stat Bars */
+    .top-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-bottom: 8px;
     }
-
-    .sub-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 6px 12px;
+    .stat-box {
+      background: rgba(255, 255, 255, 0.85);
+      color: #333;
+      padding: 6px 2px;
       border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 12px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
-    #card-grid {
-      display: grid !important;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
-      margin-top: 10px;
+    .stat-box span { display: block; font-size: 12px; color: #4f46e5; margin-top: 2px; }
+
+    /* Jackpot Box */
+    .jackpot-container {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: #333;
       margin-bottom: 10px;
-      min-height: 250px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .jackpot-bar-bg {
+      background: #e2e8f0;
+      height: 8px;
+      border-radius: 4px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+    .jackpot-bar-fill {
+      background: #f59e0b;
+      height: 100%;
+      width: 40%;
+      border-radius: 4px;
     }
 
-    .card-cell, .cell {
-      background: #f8fafc;
-      color: #1e293b;
-      font-size: 18px;
+    /* 1-100 Board Grid */
+    #board-100 {
+      display: grid !important;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 3px;
+      background: rgba(0,0,0,0.15);
+      padding: 8px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .board-cell {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      font-size: 11px;
       font-weight: bold;
       aspect-ratio: 1;
-      height: 52px;
       display: flex;
       align-items: center;
       justify-content: center;
+      border-radius: 4px;
+    }
+    .board-cell.called {
+      background: #f97316 !important;
+      color: white !important;
+    }
+
+    /* Action Buttons */
+    .action-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .btn-action {
+      flex: 1;
+      padding: 10px;
+      border: none;
       border-radius: 8px;
+      font-weight: bold;
+      font-size: 14px;
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      user-select: none;
+      color: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
+    .btn-refresh { background: #3b82f6; }
+    .btn-start { background: #d97706; }
 
-    .cell.selected {
-      background: #3b82f6 !important;
-      color: white !important;
+    /* Game Hash Box */
+    .hash-box {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      padding: 8px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 10px;
+      margin-bottom: 10px;
     }
-    .cell.free {
-      background: #ef4444 !important;
-      color: white !important;
-      border-radius: 50%;
-      font-size: 24px;
+    .hash-box strong { display: block; font-size: 11px; margin-bottom: 3px; color: #4f46e5; }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
     }
-
-    .brand-header { display: flex; align-items: center; gap: 10px; }
-    .brand-logo {
-      width: 36px; height: 36px; border-radius: 50%; background: #ffffff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 10px;
+      color: #64748b;
+      cursor: pointer;
+      text-decoration: none;
     }
-    .brand-title { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
-    
-    .board-container { display: flex; gap: 8px; background: #4e4693; padding: 8px; border-radius: 10px; margin-bottom: 12px; }
-    .called-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; flex: 2; font-size: 9px; font-weight: bold; text-align: center; }
-    .called-board div { background: rgba(255,255,255,0.15); padding: 2px 0; border-radius: 2px; }
-    .called-board div.called { background: #22c55e; color: white; }
-    
-    .current-call-box { flex: 1; background: #372e74; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px; }
-    .call-circle { background: #eab308; color: #000; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; margin-top: 4px; }
+    .nav-item.active { color: #4f46e5; }
+    .nav-item span:first-child { font-size: 18px; margin-bottom: 2px; }
 
-    .bingo-header { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 6px; text-align: center; font-weight: 900; font-size: 20px; }
-    .bingo-header div { padding: 6px 0; border-radius: 6px; color: white; }
-    .b-b { background: #f97316; } .b-i { background: #22c55e; } .b-n { background: #06b6d4; } .b-g { background: #ef4444; } .b-o { background: #a855f7; }
-
-    .btn-claim { background: #ef4444; color: white; border: none; width: 100%; padding: 12px; font-size: 20px; font-weight: bold; border-radius: 10px; cursor: pointer; }
-    .btn-claim:active { transform: scale(0.98); }
-    #msg { text-align: center; font-weight: bold; margin-top: 8px; min-height: 24px; font-size: 14px; }
-    
-    .sound-notice { text-align: center; font-size: 12px; color: #fde047; margin-bottom: 8px; cursor: pointer; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 4px; }
-    
-    /* Leaderboard Styling */
-    .leaderboard-box { background: #4e4693; border-radius: 10px; padding: 10px; margin-top: 15px; }
-    .leaderboard-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; color: #fde047; }
-    .winner-list { max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-    .winner-item { background: rgba(255, 255, 255, 0.1); padding: 6px 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    /* Admin Panel */
+    .admin-panel {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
   </style>
 </head>
 <body onclick="unlockAudio()">
 
-<!-- የድምፅ ፋይሎች (Audio Effects) -->
 <audio id="call-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 <audio id="win-sound" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" preload="auto"></audio>
 
 <div class="app-card">
-  <div class="top-bar">
-    <div class="brand-header">
-      <div class="brand-logo">🎯</div>
-      <span class="brand-title">እፎይ Bingo</span>
-      <span id="player-name" style="font-size: 12px; opacity: 0.85; margin-left: 6px;"></span>
-    </div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <span style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; font-size: 12px; color: #fde047;">🪙 <span id="player-coins">1000</span></span>
-      <span><strong id="game-status">WAIT</strong></span>
-    </div>
+  <!-- Top Stats Bar -->
+  <div class="top-stats">
+    <div class="stat-box">Wallet <span id="wallet-val">19.5</span></div>
+    <div class="stat-box">Bonus <span id="bonus-val">6</span></div>
+    <div class="stat-box">Active Game <span id="active-game-val">1</span></div>
+    <div class="stat-box">Stake <span id="stake-val">10</span></div>
   </div>
 
-  <div class="sub-bar">
-    <span id="active-players-count">🟢 ተጫዋቾች ኦንላይን: 1</span>
-    <span style="font-size: 12px; opacity: 0.8;" id="current-time"></span>
-  </div>
-
-  <div class="sound-notice" id="sound-notice-text">🔊 ድምፅ እንዲሰራ ስክሪኑን አንድ ጊዜ ንካው</div>
-
-  <div class="board-container">
-    <div class="called-board" id="full-board"></div>
-    <div class="current-call-box">
-      <span style="font-size: 10px;">Current Call</span>
-      <div class="call-circle" id="last-num">-</div>
+  <!-- Jackpot Container -->
+  <div class="jackpot-container">
+    <div style="display: flex; justify-content: space-between;">
+      <span>JACKPOT</span>
+      <span id="jackpot-text">405.4 / 1000</span>
+    </div>
+    <div class="jackpot-bar-bg">
+      <div class="jackpot-bar-fill" id="jackpot-bar"></div>
     </div>
   </div>
-  
-  <!-- አድሚን ፓነል -->
-  <div class="admin-panel" id="admin-panel" style="display: none; margin-top: 15px; text-align: center; background: rgba(0,0,0,0.25); padding: 10px; border-radius: 8px;">
-    <div style="font-size: 12px; color: #fde047; margin-bottom: 8px; font-weight: bold;">👑 የአድሚን መቆጣጠሪያ</div>
-    <button onclick="callNextNumber()" style="padding: 8px 10px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">ቁጥር ጥራ</button>
-    <button onclick="toggleAutoCall()" id="auto-btn" style="padding: 8px 10px; background: #ffc107; color: black; border: none; border-radius: 6px; font-weight: bold; margin-left: 4px; cursor: pointer; font-size: 12px;">አውቶ</button>
-    <button onclick="resetGame()" style="padding: 8px 10px; background: #dc3545; color: white; border: none; border-radius: 6px; font-weight: bold; margin-left: 4px; cursor: pointer; font-size: 12px;">አዲስ</button>
-    
-    <!-- የድል ማረጋገጫ ክፍል ለአድሚን -->
-    <div id="admin-verification-box" style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px; display: none;">
-      <div id="pending-winner-text" style="font-size: 12px; margin-bottom: 5px; color: #ffeb3b;">ተጫዋች BINGO አሸንፏል! ማረጋገጫ ይጠብቃል...</div>
-      <button onclick="approveWin()" style="background: #22c55e; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">✅ አረጋግጥ (Approve Win)</button>
-    </div>
-  </div>
-  <br>
 
-  <div class="bingo-header">
-    <div class="b-b">B</div><div class="b-i">I</div><div class="b-n">N</div><div class="b-g">G</div><div class="b-o">O</div>
+  <!-- 1-100 Board -->
+  <div id="board-100"></div>
+
+  <!-- Admin Panel (ለአድሚን ብቻ የሚታይ) -->
+  <div class="admin-panel" id="admin-panel" style="display: none;">
+    <div style="font-size: 11px; color: #fde047; margin-bottom: 5px; font-weight: bold;">👑 አድሚን መቆጣጠሪያ</div>
+    <button onclick="callNextNumber()" style="padding: 6px 10px; background: #22c55e; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 11px;">ቁጥር ጥራ</button>
+    <button onclick="toggleAutoCall()" id="auto-btn" style="padding: 6px 10px; background: #eab308; color: black; border: none; border-radius: 5px; font-weight: bold; margin-left: 4px; cursor: pointer; font-size: 11px;">አውቶ</button>
+    <button onclick="resetGame()" style="padding: 6px 10px; background: #ef4444; color: white; border: none; border-radius: 5px; font-weight: bold; margin-left: 4px; cursor: pointer; font-size: 11px;">አዲስ</button>
   </div>
 
-  <div class="player-card" id="card-grid"></div>
-  
-  <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; margin-top: 10px;">
-    <button id="sound-btn" onclick="toggleSound()" style="background: #6366f1; color: white; padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer;">🔊 Sound: ON</button>
-    <button onclick="generateCardWithFee()" style="background: #0ea5e9; color: white; padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer;">🔄 New Card (-10 🪙)</button>
+  <!-- Action Buttons -->
+  <div class="action-row">
+    <button class="btn-action btn-refresh" onclick="location.reload()">Refresh</button>
+    <button class="btn-action btn-start" id="start-btn" onclick="startGameSession()">Start Game</button>
   </div>
-  
-  <button class="btn-claim" onclick="claimBingo()">BINGO!</button>
-  <div id="msg"></div>
 
-  <!-- የአሸናፊዎች መዝገብ (Leaderboard Section) -->
-  <div class="leaderboard-box">
-    <div class="leaderboard-title">🏆 የቅርብ ጊዜ አሸናፊዎች (Winners)</div>
-    <div class="winner-list" id="winner-list">
-      <div style="text-align: center; font-size: 12px; opacity: 0.7; padding: 10px;">አሸናፊዎች እስካሁን የሉም...</div>
-    </div>
+  <!-- Game Hash (Fairness) -->
+  <div class="hash-box">
+    <strong>GAME HASH (FAIRNESS)</strong>
+    <span style="font-size: 9px; opacity: 0.8; word-break: break-all;" id="game-hash-id">ID: PS9731<br>cba00fb6c22836810577649dede39483849f5149b7c4696ca6aa633bcd78d781</span>
   </div>
+</div>
+
+<!-- Bottom Navigation Bar -->
+<div class="bottom-nav">
+  <div class="nav-item active"><span>🎮</span><span>Game</span></div>
+  <div class="nav-item" onclick="alert('Scores ክፍል በሂደት ላይ ነው')"><span>🏆</span><span>Scores</span></div>
+  <div class="nav-item" onclick="alert('History ክፍል በሂደት ላይ ነው')"><span>🕒</span><span>History</span></div>
+  <div class="nav-item" onclick="alert('Wallet ክፍል በሂደት ላይ ነው')"><span>🪙</span><span>Wallet</span></div>
+  <div class="nav-item" onclick="alert('Profile ክፍል በሂደት ላይ ነው')"><span>👤</span><span>Profile</span></div>
 </div>
 
 <script>
@@ -194,58 +224,35 @@
   const db = firebase.database();
 
   let calledNumbers = [];
-  let userCard = [];
-  let selectedIndices = new Set([12]);
-  let previousLastNumber = null;
   let isMuted = false;
   let autoCallInterval = null;
   let isAutoRunning = false;
+  let previousLastNumber = null;
 
-  // Player Coins System
-  let playerCoins = parseInt(localStorage.getItem('efoy_coins')) || 1000;
-  function updateCoinsDisplay() {
-    document.getElementById('player-coins').innerText = playerCoins;
-    localStorage.setItem('efoy_coins', playerCoins);
-  }
+  const tg = window.Telegram?.WebApp;
+  const ADMIN_ID = 407842423;
 
-  function toggleSound() {
-    isMuted = !isMuted;
-    const btn = document.getElementById('sound-btn');
-    if (btn) btn.innerText = isMuted ? '🔇 Sound: OFF' : '🔊 Sound: ON';
-  }
-  
   function unlockAudio() {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.resume();
-    }
-    const notice = document.getElementById('sound-notice-text');
-    if (notice) notice.innerText = "🔊 ድምፅ ተከፍቷል";
+    if ('speechSynthesis' in window) window.speechSynthesis.resume();
   }
 
-  const fullBoardEl = document.getElementById('full-board');
-  for (let i = 1; i <= 75; i++) {
-    let d = document.createElement('div');
-    d.id = `board-num-${i}`;
-    d.innerText = i;
-    fullBoardEl.appendChild(d);
+  // Build 1-100 Board
+  const boardEl = document.getElementById('board-100');
+  for (let i = 1; i <= 100; i++) {
+    let cell = document.createElement('div');
+    cell.className = 'board-cell';
+    cell.id = `cell-${i}`;
+    cell.innerText = i;
+    boardEl.appendChild(cell);
   }
 
   function speakNumber(num) {
     if (isMuted) return;
-    let letter = '';
-    if (num >= 1 && num <= 15) letter = 'B';
-    else if (num >= 16 && num <= 30) letter = 'I';
-    else if (num >= 31 && num <= 45) letter = 'N';
-    else if (num >= 46 && num <= 60) letter = 'G';
-    else if (num >= 61 && num <= 75) letter = 'O';
-
-    const textToSpeak = `${letter} ${num}`;
-
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      const utterance = new SpeechSynthesisUtterance(num.toString());
       utterance.lang = 'en-US';
-      utterance.rate = 0.85;
+      utterance.rate = 0.9;
       window.speechSynthesis.speak(utterance);
     }
   }
@@ -254,25 +261,11 @@
     const data = snapshot.val();
     if (!data) return;
 
-    if (data.status) document.getElementById('game-status').innerText = data.status;
-
-    // Admin Verification Panel Listener
-    const adminBox = document.getElementById('admin-verification-box');
-    const pendingText = document.getElementById('pending-winner-text');
-    if (data.status === 'PENDING_VERIFICATION' && data.pendingWinner) {
-      if (tg?.initDataUnsafe?.user?.id === ADMIN_ID || true) { // ለፈተና እንዲመች
-        adminBox.style.display = 'block';
-        pendingText.innerText = `👤 ${data.pendingWinner.name} BINGO አሸንፏል! ማረጋገጫ ይጠብቃል።`;
-      }
-    } else {
-      if (adminBox) adminBox.style.display = 'none';
-    }
-
     if (data.calledNumbers) {
       calledNumbers = Array.isArray(data.calledNumbers) ? data.calledNumbers : Object.values(data.calledNumbers);
       
-      for (let i = 1; i <= 75; i++) {
-        let el = document.getElementById(`board-num-${i}`);
+      for (let i = 1; i <= 100; i++) {
+        let el = document.getElementById(`cell-${i}`);
         if (el) {
           if (calledNumbers.includes(i)) el.classList.add('called');
           else el.classList.remove('called');
@@ -280,313 +273,77 @@
       }
 
       let last = calledNumbers[calledNumbers.length - 1];
-      document.getElementById('last-num').innerText = last !== undefined ? last : '-';
-
       if (last !== undefined && last !== previousLastNumber) {
         speakNumber(last);
-        if (!isMuted) {
-          document.getElementById('call-sound').play().catch(() => {});
-        }
+        document.getElementById('call-sound').play().catch(() => {});
         previousLastNumber = last;
       }
     } else {
       calledNumbers = [];
       previousLastNumber = null;
-      document.getElementById('last-num').innerText = '-';
-      for (let i = 1; i <= 75; i++) {
-        let el = document.getElementById(`board-num-${i}`);
+      for (let i = 1; i <= 100; i++) {
+        let el = document.getElementById(`cell-${i}`);
         if (el) el.classList.remove('called');
       }
     }
   });
 
-  // Active Players Presence System
-  const myPresenceRef = db.ref('activePlayers').push();
-  myPresenceRef.onDisconnect().remove();
-  
-  const tg = window.Telegram?.WebApp;
-  const ADMIN_ID = 407842423;
-  const playerName = tg?.initDataUnsafe?.user?.first_name || "ተጫዋች_" + Math.floor(Math.random() * 1000);
-  
-  myPresenceRef.set({ name: playerName, onlineAt: firebase.database.ServerValue.TIMESTAMP });
-
-  db.ref('activePlayers').on('value', snapshot => {
-    const activeData = snapshot.val();
-    const countEl = document.getElementById('active-players-count');
-    if (countEl) {
-      const count = activeData ? Object.keys(activeData).length : 1;
-      countEl.innerText = `🟢 ተጫዋቾች ኦንላይን: ${count}`;
-    }
-  });
-
-  // Winners Listener (Leaderboard)
-  db.ref('winners').on('value', snapshot => {
-    const winnersData = snapshot.val();
-    const listEl = document.getElementById('winner-list');
-    if (!listEl) return;
-
-    listEl.innerHTML = '';
-    if (!winnersData) {
-      listEl.innerHTML = '<div style="text-align: center; font-size: 12px; opacity: 0.7; padding: 10px;">አሸናፊዎች እስካሁን የሉም...</div>';
-      return;
-    }
-
-    let winnersArray = Object.values(winnersData).reverse();
-    winnersArray.forEach(w => {
-      let item = document.createElement('div');
-      item.className = 'winner-item';
-      item.innerHTML = `<span>👤 <strong>${w.name}</strong> (+500 🪙)</span> <span style="font-size: 11px; opacity: 0.8;">🕒 ${w.claimedAt}</span>`;
-      listEl.appendChild(item);
-    });
-  });
-
-  function generateCardWithFee() {
-    if (playerCoins < 10) {
-      alert("❌ በቂ ሳንቲም (Coins) የለዎትም!");
-      return;
-    }
-    playerCoins -= 10;
-    updateCoinsDisplay();
-    generateCard();
+  function startGameSession() {
+    db.ref('currentGame').update({ status: 'STARTED' });
+    alert("ጨዋታው ተጀምሯል!");
   }
 
-  function generateCard() {
-    const ranges = [[1, 15], [16, 30], [31, 45], [46, 60], [61, 75]];
-    let cols = [];
-
-    for (let i = 0; i < 5; i++) {
-      let nums = [];
-      while (nums.length < 5) {
-        let r = Math.floor(Math.random() * (ranges[i][1] - ranges[i][0] + 1)) + ranges[i][0];
-        if (!nums.includes(r)) nums.push(r);
-      }
-      cols.push(nums);
-    }
-
-    userCard = [];
-    for (let row = 0; row < 5; row++) {
-      for (let col = 0; col < 5; col++) {
-        if (row === 2 && col === 2) {
-          userCard.push('FREE');
-        } else {
-          userCard.push(cols[col][row]);
-        }
-      }
-    }
-    
-    selectedIndices = new Set([12]);
-    renderCard();
-  }
-
-  function renderCard() {
-    const grid = document.getElementById('card-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    userCard.forEach((num, index) => {
-      const cell = document.createElement('div');
-      cell.className = 'cell' + (num === 'FREE' ? ' free selected' : '') + (selectedIndices.has(index) ? ' selected' : '');
-      cell.innerText = num === 'FREE' ? '★' : num;
-      cell.onclick = () => {
-        unlockAudio();
-        triggerHaptic();
-        if (num === 'FREE') return;
-        if (selectedIndices.has(index)) selectedIndices.delete(index);
-        else selectedIndices.add(index);
-        renderCard();
-      };
-      grid.appendChild(cell);
-    });
-  }
-
-  function checkWinLogic() {
-    const winningCombinations = [
-      [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
-      [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
-      [0,6,12,18,24], [4,8,12,16,20]
-    ];
-
-    for (let combo of winningCombinations) {
-      let isComboSelected = combo.every(idx => selectedIndices.has(idx));
-      if (isComboSelected) {
-        let allNumbersCalled = combo.every(idx => {
-          let num = userCard[idx];
-          return num === 'FREE' || calledNumbers.includes(num);
-        });
-        if (allNumbersCalled) return true;
-      }
-    }
-    return false;
-  }
-
-  function claimBingo() {
-    const msg = document.getElementById('msg');
-    
-    if (checkWinLogic()) {
-      msg.style.color = '#fde047';
-      msg.innerText = '⏳ አድሚኑ ማረጋገጫውን እንዲመረምር ተልኳል... ይጠብቁ!';
-      
-      const playerSelectedNumbers = Array.from(selectedIndices).map(idx => userCard[idx]);
-      const currentTime = new Date().toLocaleTimeString();
-
-      db.ref('currentGame').update({
-        status: 'PENDING_VERIFICATION',
-        pendingWinner: {
-          name: playerName,
-          fullCard: userCard,
-          selectedNumbers: playerSelectedNumbers,
-          claimedAt: currentTime
-        }
-      });
-    } else {
-      msg.style.color = '#ef4444';
-      msg.innerText = '❌ BINGO አልተሰራም! የተጠሩትን ቁጥሮች ያረጋግጡ።';
-    }
-  }
-
-  // Admin approves win
-  function approveWin() {
-    db.ref('currentGame').once('value', snapshot => {
-      const data = snapshot.val();
-      if (!data || !data.pendingWinner) return;
-
-      const winnerInfo = data.pendingWinner;
-      
-      db.ref('winners').push({
-        name: winnerInfo.name,
-        claimedAt: winnerInfo.claimedAt
-      });
-
-      db.ref('currentGame').update({
-        status: 'WON',
-        winner: winnerInfo.name,
-        pendingWinner: null
-      });
-
-      alert(`✅ የ ${winnerInfo.name} ድል በአድሚን ጸድቋል!`);
-    });
-  }
-
-  // Listen to Final Game Won Status for Sound & Confetti
-  db.ref('currentGame/status').on('value', snapshot => {
-    const status = snapshot.val();
-    if (status === 'WON') {
-      const msg = document.getElementById('msg');
-      if (msg) {
-        msg.style.color = '#22c55e';
-        msg.innerText = '🎉 BINGO ጸድቋል! አሸናፊ ሆነዋል!';
-      }
-      playerCoins += 500; // Reward +500 coins
-      updateCoinsDisplay();
-
-      if (!isMuted) {
-        document.getElementById('win-sound').play().catch(() => {});
-      }
-      triggerConfetti();
-    }
-  });
-
-  function triggerConfetti() {
-    confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-  }
-
-  function triggerHaptic() {
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-    }
-  }
-
-  // Admin controls & Auto-call logic
   function callNextNumber() {
-    const gameRef = db.ref('currentGame');
-    gameRef.once('value', (snapshot) => {
-      const data = snapshot.val() || {};
+    db.ref('currentGame').once('value', snapshot => {
+      let data = snapshot.val() || {};
       let called = data.calledNumbers || [];
       if (!Array.isArray(called)) called = Object.values(called);
 
-      if (called.length >= 75) {
-        stopAutoCall();
-        return alert("ሁሉም ቁጥሮች ተጠርተዋል!");
+      if (called.length >= 100) {
+        alert("ሁሉም 100 ቁጥሮች ተጠርተዋል!");
+        return;
       }
 
       let nextNum;
       do {
-        nextNum = Math.floor(Math.random() * 75) + 1;
+        nextNum = Math.floor(Math.random() * 100) + 1;
       } while (called.includes(nextNum));
 
       called.push(nextNum);
-      gameRef.update({
-        calledNumbers: called,
-        lastCalled: nextNum,
-        status: 'STARTED'
-      });
+      db.ref('currentGame').update({ calledNumbers: called, status: 'STARTED' });
     });
   }
 
   function toggleAutoCall() {
-    const autoBtn = document.getElementById('auto-btn');
+    const btn = document.getElementById('auto-btn');
     if (!isAutoRunning) {
       isAutoRunning = true;
-      autoBtn.style.background = '#fd7e14';
-      autoBtn.style.color = 'white';
-      autoBtn.innerText = 'አቁም';
-
-      autoCallInterval = setInterval(() => {
-        callNextNumber();
-      }, 4000);
-
+      btn.innerText = 'አቁም';
+      autoCallInterval = setInterval(() => callNextNumber(), 3500);
     } else {
-      stopAutoCall();
-    }
-  }
-
-  function stopAutoCall() {
-    isAutoRunning = false;
-    clearInterval(autoCallInterval);
-    const autoBtn = document.getElementById('auto-btn');
-    if (autoBtn) {
-      autoBtn.style.background = '#ffc107';
-      autoBtn.style.color = 'black';
-      autoBtn.innerText = 'አውቶ';
+      isAutoRunning = false;
+      clearInterval(autoCallInterval);
+      btn.innerText = 'አውቶ';
     }
   }
 
   function resetGame() {
-    stopAutoCall();
-    db.ref('currentGame').set({
-        calledNumbers: [],
-        lastCalled: '-',
-        status: 'WAIT',
-        pendingWinner: null,
-        winner: null
-    });
-    const msg = document.getElementById('msg');
-    if (msg) msg.innerText = '';
+    isAutoRunning = false;
+    clearInterval(autoCallInterval);
+    db.ref('currentGame').set({ calledNumbers: [], status: 'WAIT' });
   }
 
-  // Initialization
   function initApp() {
-    updateCoinsDisplay();
     if (tg) {
-        tg.expand();
-        tg.ready();
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            const nameElement = document.getElementById('player-name');
-            if (nameElement) nameElement.innerText = `(${user.first_name})`;
-            
-            if (user.id === ADMIN_ID) {
-                document.getElementById('admin-panel').style.display = 'block';
-            }
-        }
+      tg.expand();
+      tg.ready();
+      if (tg.initDataUnsafe?.user?.id === ADMIN_ID) {
+        document.getElementById('admin-panel').style.display = 'block';
+      }
     }
-    generateCard();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
-  } else {
-    initApp();
-  }
+  document.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
 </html>
