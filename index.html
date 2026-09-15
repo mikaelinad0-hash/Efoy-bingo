@@ -62,6 +62,30 @@
     .view-section { display: none; flex-direction: column; gap: 8px; flex: 1; }
     .view-section.active-view { display: flex; }
 
+    /* Main Game Area Tabs inside Game View */
+    .game-mode-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 5px;
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 6px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .mode-tab.active-mode {
+      background: #4f46e5;
+    }
+
+    .sub-view { display: none; }
+    .sub-view.active-sub { display: block; }
+
     /* 1-100 Board Grid */
     #board-100 {
       display: grid !important;
@@ -88,6 +112,42 @@
       color: white !important;
     }
 
+    /* Player Bingo Card (5x5) */
+    .bingo-card-container {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 10px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .bingo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+    .bingo-cell {
+      background: rgba(255, 255, 255, 0.85);
+      color: #1e1b4b;
+      font-size: 14px;
+      font-weight: bold;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      transition: 0.2s;
+    }
+    .bingo-cell.marked {
+      background: #22c55e !important;
+      color: white !important;
+    }
+    .bingo-cell.free-space {
+      background: #f59e0b;
+      color: white;
+      font-size: 11px;
+    }
+
     /* Action Buttons */
     .action-row {
       display: flex;
@@ -100,13 +160,14 @@
       border: none;
       border-radius: 8px;
       font-weight: bold;
-      font-size: 14px;
+      font-size: 13px;
       cursor: pointer;
       color: white;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
     .btn-refresh { background: #3b82f6; }
     .btn-start { background: #d97706; }
+    .btn-bingo { background: #ef4444; font-size: 15px; letter-spacing: 1px; }
 
     /* Admin Panel */
     .admin-panel {
@@ -203,7 +264,31 @@
 
   <!-- 1. GAME VIEW (ዋናው የጨዋታ ገጽ) -->
   <div id="view-game" class="view-section active-view">
-    <div id="board-100"></div>
+    
+    <!-- Sub Mode Switcher (Board vs My Bingo Card) -->
+    <div class="game-mode-tabs">
+      <button class="mode-tab active-mode" onclick="switchGameMode('board', this)">ቁጥሮች (1-100)</button>
+      <button class="mode-tab" onclick="switchGameMode('card', this)">የእኔ ቢንጎ ካርድ 🎫</button>
+    </div>
+
+    <!-- Mode 1: 1-100 Called Board -->
+    <div id="sub-board" class="sub-view active-sub">
+      <div id="board-100"></div>
+    </div>
+
+    <!-- Mode 2: Player Bingo Card -->
+    <div id="sub-card" class="sub-view">
+      <div class="bingo-card-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 12px; font-weight: bold; color: #fde047;">የእርስዎ የቢንጎ ካርድ</span>
+          <button onclick="generateNewCard()" style="background: #2563eb; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">ካርድ ቀይር</button>
+        </div>
+        <div class="bingo-grid" id="player-bingo-grid">
+          <!-- Dynamically generated 25 cells -->
+        </div>
+      </div>
+      <button class="action-row btn-action btn-bingo" onclick="checkBingoWin()">🎉 BINGO! (አሸነፍኩ)</button>
+    </div>
 
     <!-- Admin Panel -->
     <div class="admin-panel" id="admin-panel" style="display: none;">
@@ -219,7 +304,7 @@
     </div>
   </div>
 
-  <!-- 2. SCORES VIEW (የአሸናፊዎች ውጤቶች) -->
+  <!-- 2. SCORES VIEW -->
   <div id="view-scores" class="view-section">
     <div class="panel-card-box">
       <div class="panel-title">🏆 የውጤቶች ሰሌዳ (Scores & Winners)</div>
@@ -229,7 +314,7 @@
     </div>
   </div>
 
-  <!-- 3. HISTORY VIEW (የጨዋታ ታሪክ) -->
+  <!-- 3. HISTORY VIEW -->
   <div id="view-history" class="view-section">
     <div class="panel-card-box">
       <div class="panel-title">🕒 የጨዋታ ታሪክ (Game History)</div>
@@ -314,6 +399,15 @@
     element.classList.add('active');
   }
 
+  // Switch Inner Game Modes (Board vs Card)
+  function switchGameMode(mode, element) {
+    document.querySelectorAll('.sub-view').forEach(el => el.classList.remove('active-sub'));
+    document.querySelectorAll('.game-mode-tabs .mode-tab').forEach(el => el.classList.remove('active-mode'));
+
+    document.getElementById(`sub-${mode}`).classList.add('active-sub');
+    element.classList.add('active-mode');
+  }
+
   // Build 1-100 Board
   const boardEl = document.getElementById('board-100');
   for (let i = 1; i <= 100; i++) {
@@ -322,6 +416,74 @@
     cell.id = `cell-${i}`;
     cell.innerText = i;
     boardEl.appendChild(cell);
+  }
+
+  // Generate Player 5x5 Bingo Card
+  let playerCardNumbers = [];
+  function generateNewCard() {
+    playerCardNumbers = [];
+    let available = [];
+    for (let i = 1; i <= 75; i++) available.push(i);
+    // Shuffle and pick 24 numbers (since center is FREE)
+    available.sort(() => Math.random() - 0.5);
+    playerCardNumbers = available.slice(0, 24);
+    playerCardNumbers.splice(12, 0, "FREE"); // Middle spot
+
+    renderPlayerCard();
+  }
+
+  function renderPlayerCard() {
+    const gridEl = document.getElementById('player-bingo-grid');
+    gridEl.innerHTML = '';
+    
+    playerCardNumbers.forEach((num, index) => {
+      let cell = document.createElement('div');
+      cell.className = 'bingo-cell';
+      if (num === "FREE") {
+        cell.classList.add('free-space', 'marked');
+        cell.innerText = "FREE";
+      } else {
+        cell.innerText = num;
+        cell.id = `card-cell-${num}`;
+        cell.onclick = () => {
+          if (calledNumbers.includes(num)) {
+            cell.classList.toggle('marked');
+          } else {
+            alert(`ቁጥር ${num} ገና አልተጠራም!`);
+          }
+        };
+      }
+      gridEl.appendChild(cell);
+    });
+  }
+
+  // Check Bingo Win Condition
+  function checkBingoWin() {
+    // Simple check: check if center and at least 4 marked numbers around are called/marked
+    let markedCount = 0;
+    playerCardNumbers.forEach(num => {
+      if (num === "FREE") return;
+      let el = document.getElementById(`card-cell-${num}`);
+      if (el && el.classList.contains('marked')) {
+        markedCount++;
+      }
+    });
+
+    if (markedCount >= 5) {
+      // Trigger Winner Celebration!
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      document.getElementById('win-sound').play().catch(() => {});
+      
+      let userName = tg?.initDataUnsafe?.user?.first_name || "ተጫዋች";
+      db.ref('winners').push({
+        name: userName,
+        claimedAt: new Date().toLocaleTimeString()
+      });
+
+      alert("🎉 እንኳን ደስ አሎት! BINGO አሸንፈዋል!");
+    } else {
+      alert("ገና በቂ ቁጥሮች አልሞሉም! (ቢያንስ 5 ቁጥሮች መሞላት አለባቸው)");
+    }
   }
 
   function speakNumber(num) {
@@ -423,7 +585,6 @@
       called.push(nextNum);
       db.ref('currentGame').update({ calledNumbers: called, status: 'STARTED' });
 
-      // Add to History list
       db.ref('gameHistory').push({
         calledNumber: nextNum,
         time: new Date().toLocaleTimeString()
@@ -474,6 +635,7 @@
 
   function initApp() {
     updateCoinsDisplay();
+    generateNewCard(); // Generate initial player bingo card
     if (tg) {
       tg.expand();
       tg.ready();
