@@ -235,27 +235,61 @@ function toggleSound() {
   });
 
   function generateCard() {
+    const cardGrid = document.getElementById('card-grid');
+    if (!cardGrid) return;
+    
+    cardGrid.innerHTML = '';
+
     const ranges = [[1, 15], [16, 30], [31, 45], [46, 60], [61, 75]];
     let cols = [];
+
     for (let i = 0; i < 5; i++) {
-      let nums = [];
-      while (nums.length < 5) {
-        let r = Math.floor(Math.random() * (ranges[i][1] - ranges[i][0] + 1)) + ranges[i][0];
-        if (!nums.includes(r)) nums.push(r);
+        let nums = [];
+        while (nums.length < 5) {
+            let r = Math.floor(Math.random() * (ranges[i][1] - ranges[i][0] + 1)) + ranges[i][0];
+            if (!nums.includes(r)) nums.push(r);
+        }
+        cols.push(nums);
       }
-      cols.push(nums);
-    }
 
-    userCard = [];
     for (let row = 0; row < 5; row++) {
-      for (let col = 0; col < 5; col++) {
-        if (row === 2 && col === 2) userCard.push("FREE");
-        else userCard.push(cols[col][row]);
-      }
+        for (let col = 0; col < 5; col++) {
+            const cell = document.createElement('div');
+            cell.className = 'card-cell';
+            
+            if (row === 2 && col === 2) {
+                cell.innerText = 'FREE';
+                cell.classList.add('selected');
+            } else {
+                cell.innerText = cols[col][row];
+                cell.onclick = function() {
+                    this.classList.toggle('selected');
+                };
+            }
+            cardGrid.appendChild(cell);
+        }
     }
-    renderCard();
-  }
+}
+    }
 
+    for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+            const cell = document.createElement('div');
+            cell.className = 'card-cell';
+            
+            if (row === 2 && col === 2) {
+                cell.innerText = 'FREE';
+                cell.classList.add('selected');
+            } else {
+                cell.innerText = cols[col][row];
+                cell.onclick = function() {
+                    this.classList.toggle('selected');
+                };
+            }
+            cardGrid.appendChild(cell);
+        }
+    }
+}
   function renderCard() {
     const grid = document.getElementById('card-grid');
     if (!grid) return;
