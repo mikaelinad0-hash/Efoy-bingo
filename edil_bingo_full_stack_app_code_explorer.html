@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Edil Bingo — Full-Stack App & Code Explorer</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Merriweather:wght@700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-green: #78BE43;
+      --card-green: #92CC62;
+      --card-border: #B4DF8E;
+      --dark-green: #1A5E2A;
+      --caller-bg: #5C9E31;
+      --caller-cell: #73B244;
+      --jackpot-strip: #5A9431;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0F172A;
+      color: #F8FAFC;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .serif-heading {
+      font-family: 'Merriweather', serif;
+    }
+    .mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .edil-bg {
+      background-color: var(--primary-green);
+    }
+    .edil-card {
+      background-color: var(--card-green);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.12);
+      border-radius: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.45);
+      border-radius: 6px;
+    }
+    /* Full-size unshrunk Cartela cards inside the extended right-side ScrollView */
+    .fullsize-cartela-card {
+      min-height: 256px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Workspace Header: Switch between Interactive Simulator & Full-Stack Codebase -->
+  <header class="bg-slate-900/95 border-b border-slate-800 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 sticky top-0 z-30">
+    <div class="flex items-center gap-2.5">
+      <span class="w-8 h-8 rounded-lg bg-[#78BE43] flex items-center justify-center text-lg shadow">🎯</span>
+      <div>
+        <h1 class="text-sm font-extrabold tracking-tight text-white flex items-center gap-2">
+          Edil Bingo
+          <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            Green/Orange Master Caller + Dynamic Left-Stacked Buttons (2+ Cartelas)
+          </span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- Quick Screen Jump Pills -->
+    <div class="flex flex-wrap items-center gap-1.5">
+      <button id="jump-lobby" type="button" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition">
+        1. Lobby (Home)
+      </button>
+      <button id="jump-cartela" type="button" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition">
+        2. Cartela Select (#48)
+      </button>
+      <button id="jump-active" type="button" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition">
+        3. Active Game (#44)
+      </button>
+      <button id="jump-scores" type="button" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition">
+        4. Leaderboard
+      </button>
+      <button id="jump-wallet" type="button" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition">
+        5. Wallet
+      </button>
+      <button id="jump-profile" type="button" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 transition">
+        6. Profile
+      </button>
+      <button id="toggle-code-drawer" type="button" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 hover:bg-amber-300 transition ml-1">
+        { } Inspect RN & Backend Code
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace Split View -->
+  <main class="flex-1 flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 p-3 sm:p-5 max-w-7xl mx-auto w-full">
+
+    <!-- MOBILE DEVICE SIMULATOR (Exact Match to Edil Bingo UI Screenshots) -->
+    <div class="w-full max-w-[420px] bg-white rounded-[32px] shadow-2xl border-[6px] border-slate-800 overflow-hidden flex flex-col shrink-0" style="height: 820px;">
+
+      <!-- Top White App Bar (Matches Telegram Mini-App / Native Header in Screenshots) -->
+      <div class="bg-white text-slate-900 px-3.5 py-2.5 flex items-center justify-between border-b border-slate-200 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <button id="header-close-btn" type="button" class="text-slate-700 hover:text-black text-xl leading-none font-medium" title="Return to Lobby">✕</button>
+          <span class="font-bold text-base tracking-tight text-slate-900">Edil Bingo</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-slate-700">
+          <button id="btn-toggle-1v2-boards" type="button" class="text-[10px] font-bold bg-indigo-100 text-indigo-900 px-2 py-1 rounded-md hover:bg-indigo-200 transition" title="Toggle between 1 Cartela (Full-Width Bottom Buttons) and 2 Cartelas (Left-Stacked Buttons)">
+            ⇄ 1 vs 2 Boards
+          </button>
+          <button id="btn-skip-30s" type="button" class="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-1 rounded-md hover:bg-amber-200 transition" title="Draw next ball immediately">
+            ⏩ Skip 30s
+          </button>
+          <button id="btn-reset-precall" type="button" class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md hover:bg-emerald-200 transition" title="Reset to 1 Cartela & Pre-Call 30s Countdown">
+            ↺ Reset Pre-Call
+          </button>
+        </div>
+      </div>
+
+      <!-- Toast Notification Banner inside Mobile Viewport -->
+      <div id="mobile-toast" class="hidden bg-slate-900 text-white text-xs font-bold px-3 py-2 text-center transition-all shrink-0"></div>
+
+      <!-- Dynamic Screen Content Area (Green Background #78BE43) -->
+      <div id="screen-viewport" class="flex-1 edil-bg overflow-y-auto custom-scroll relative flex flex-col">
+
+        <!-- ========================================================= -->
+        <!-- SCREEN 1: LOBBY / HOME SCREEN (BINGO GAMES)               -->
+        <!-- ========================================================= -->
+        <section id="screen-lobby" class="hidden p-3 flex-1 flex flex-col">
+          <div class="flex items-center justify-between text-white serif-heading text-sm font-bold px-1 pt-1 pb-3">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block shadow"></span>
+              <span>Live</span>
+            </div>
+            <div>Bonus: <span id="lobby-bonus-val">0.0</span></div>
+            <div>Balance: <span id="lobby-balance-val">7940.0</span></div>
+          </div>
+
+          <div class="flex items-center gap-2 mt-1 mb-2 px-1">
+            <span class="text-lg">🎯</span>
+            <h2 class="text-white serif-heading font-bold text-base tracking-wide">BINGO GAMES</h2>
+          </div>
+
+          <div class="grid grid-cols-3 text-[11px] font-bold text-white/90 serif-heading px-3 mb-1.5">
+            <span>BET</span>
+            <span class="text-center">WIN / PLAYER</span>
+            <span class="text-right">STATUS &amp; JOIN</span>
+          </div>
+
+          <div id="lobby-rooms-list" class="space-y-3 pb-4"></div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- SCREEN 2: PRE-GAME / CARTELA SELECTION (1 - 200)          -->
+        <!-- ========================================================= -->
+        <section id="screen-cartela" class="hidden p-2.5 flex-1 flex flex-col">
+          <div class="grid grid-cols-4 gap-1.5 mb-2">
+            <div class="edil-card rounded-xl py-2 px-1 text-center">
+              <div class="text-[10px] text-white/90 serif-heading uppercase">WALLET</div>
+              <div id="cartela-wallet-val" class="text-sm font-extrabold text-white serif-heading mt-0.5">7760.0</div>
+            </div>
+            <div class="edil-card rounded-xl py-2 px-1 text-center">
+              <div class="text-[10px] text-white/90 serif-heading uppercase">BONUS</div>
+              <div id="cartela-bonus-val" class="text-sm font-extrabold text-white serif-heading mt-0.5">0.0</div>
+            </div>
+            <div class="edil-card rounded-xl py-2 px-1 text-center">
+              <div class="text-[10px] text-white/90 serif-heading uppercase">ACTIVE GAME</div>
+              <div id="cartela-gameid-val" class="text-sm font-extrabold text-white serif-heading mt-0.5">#2</div>
+            </div>
+            <div class="edil-card rounded-xl py-2 px-1 text-center">
+              <div class="text-[10px] text-white/90 serif-heading uppercase">STAKE</div>
+              <div id="cartela-stake-val" class="text-sm font-extrabold text-white serif-heading mt-0.5">20</div>
+            </div>
+          </div>
+
+          <div class="edil-card rounded-lg px-3 py-1.5 flex items-center justify-between text-xs font-bold text-white serif-heading mb-2">
+            <span>JACKPOT</span>
+            <span id="cartela-jackpot-val">--:-- / 1000</span>
+          </div>
+
+          <div class="text-center text-white serif-heading font-bold text-sm mb-2">
+            Select Up to 4 Cartelas (1-200) [<span id="cartela-count-label">1/4</span>]
+          </div>
+
+          <div class="edil-card rounded-2xl p-2 h-64 overflow-y-auto custom-scroll mb-3">
+            <div id="cartela-200-grid" class="grid grid-cols-10 gap-1.5"></div>
+          </div>
+
+          <div class="grid grid-cols-12 gap-2.5 items-start">
+            <div class="col-span-5 edil-card rounded-xl p-2 flex flex-col items-center">
+              <div id="cartela-preview-title" class="text-xs font-bold text-white serif-heading mb-1.5">#48</div>
+              <div id="cartela-preview-grid" class="grid grid-cols-5 gap-1 w-full"></div>
+            </div>
+
+            <div class="col-span-7 flex flex-col gap-2">
+              <div class="grid grid-cols-2 gap-2">
+                <button id="btn-cartela-refresh" type="button" class="bg-[#2584C6] hover:bg-[#1e6fa8] text-white serif-heading font-bold text-sm py-2.5 rounded-full shadow">
+                  Refresh
+                </button>
+                <button id="btn-cartela-start" type="button" class="bg-[#FF6B00] hover:bg-[#e66000] text-white serif-heading font-bold text-sm py-2.5 rounded-full shadow">
+                  Start Game
+                </button>
+              </div>
+
+              <div class="bg-white rounded-xl p-2.5 text-center shadow">
+                <div class="text-[11px] font-bold text-slate-900 serif-heading">GAME HASH (FAIRNESS)</div>
+                <div class="inline-block bg-slate-200 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded my-1 serif-heading">
+                  ID: <span id="cartela-hash-id">#2</span>
+                </div>
+                <div id="cartela-hash-text" class="text-[10px] text-slate-800 break-all leading-tight font-medium">
+                  84c4f156667c6b6171582ed413faee0af30082c96c890a9d72ff5bf8616ac08b
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- SCREEN 3: ACTIVE GAME BOARD SCREEN (DYNAMIC LAYOUT)       -->
+        <!-- ========================================================= -->
+        <section id="screen-active" class="p-2 flex-1 flex flex-col justify-between overflow-hidden">
+          <!-- Top 7 Stat Pills -->
+          <div class="grid grid-cols-7 gap-1 mb-1.5 shrink-0">
+            <div class="edil-card rounded-xl py-1 px-0.5 text-center">
+              <div class="text-[8px] text-white/90 serif-heading">GAME</div>
+              <div id="active-game-id" class="text-xs font-bold text-white serif-heading mt-0.5">P1</div>
+            </div>
+            <div class="edil-card rounded-xl py-1 px-0.5 text-center">
+              <div class="text-[8px] text-white/90 serif-heading">DERASH</div>
+              <div id="active-derash" class="text-xs font-bold text-white serif-heading mt-0.5">17</div>
+            </div>
+            <div class="edil-card rounded-xl py-1 px-0.5 text-center">
+              <div class="text-[8px] text-white/90 serif-heading">BONUS</div>
+              <div class="text-xs font-bold text-white serif-heading mt-0.5">Off</div>
+            </div>
+            <div class="edil-card rounded-xl py-1 px-0.5 text-center">
+              <div class="text-[8px] text-white/90 serif-heading">PLAYERS</div>
+              <div id="active-players" class="text-xs font-bold text-white serif-heading mt-0.5">2</div>
+            </div>
+            <div class="edil-card rounded-xl py-1 px-0.5 text-center">
+              <div class="text-[8px] text-white/90 serif-heading">STAKE</div>
+              <div id="active-stake" class="text-xs font-bold text-white serif-heading mt-0.5">10</div>
+            </div>
+            <div class="edil-card rounded-xl py-1 px-0.5 text-center">
+              <div class="text-[8px] text-white/90 serif-heading">CALL</div>
+              <div id="active-call-count" class="text-xs font-bold text-white serif-heading mt-0.5">0</div>
+            </div>
+            <button id="btn-toggle-sound" type="button" class="edil-card rounded-xl py-1 px-0.5 text-center">
+              <div class="text-[8px] text-white/90 serif-heading">SOUND</div>
+              <div id="active-sound-label" class="text-xs font-bold text-white serif-heading mt-0.5">ON</div>
+            </button>
+          </div>
+
+          <!-- =============================================================== -->
+          <!-- MAIN SPLIT AREA:                                                -->
+          <!-- - Left Column (col-span-5): 1-75 Master Caller Board            -->
+          <!--   (Past calls = Orange, Current Call = Green) +                 -->
+          <!--   When >=2 Cartelas: BINGO!, Refresh, Leave stacked underneath  -->
+          <!-- - Right Column (col-span-7): Countdown + Current Call (w/       -->
+          <!--   Last 4 Called Numbers) + Full-Height Cartela ScrollView       -->
+          <!--   stretching all the way to the bottom unobstructed!            -->
+          <!-- =============================================================== -->
+          <div class="grid grid-cols-12 gap-2 flex-1 min-h-0 items-stretch">
+            <!-- LEFT SIDE: 1-75 Master Caller Board + Conditional Left-Stacked Buttons (Condition 2: >=2 Cartelas) -->
+            <div class="col-span-5 flex flex-col justify-between min-h-0">
+              <div class="bg-[#5C9E31] rounded-2xl p-1.5 flex-1 flex flex-col justify-between shadow-inner min-h-0">
+                <!-- B I N G O Header Circles -->
+                <div class="grid grid-cols-5 gap-1 mb-1 justify-items-center shrink-0">
+                  <span class="w-5 h-5 rounded-full bg-[#F5B82E] text-white text-[10px] font-bold flex items-center justify-center serif-heading">B</span>
+                  <span class="w-5 h-5 rounded-full bg-[#E11D62] text-white text-[10px] font-bold flex items-center justify-center serif-heading">I</span>
+                  <span class="w-5 h-5 rounded-full bg-[#1CA1E3] text-white text-[10px] font-bold flex items-center justify-center serif-heading">N</span>
+                  <span class="w-5 h-5 rounded-full bg-[#F04E23] text-white text-[10px] font-bold flex items-center justify-center serif-heading">G</span>
+                  <span class="w-5 h-5 rounded-full bg-[#36B368] text-white text-[10px] font-bold flex items-center justify-center serif-heading">O</span>
+                </div>
+                <!-- 15x5 Numbers Container -->
+                <div id="caller-75-grid" class="grid grid-cols-5 gap-1 flex-1"></div>
+              </div>
+
+              <!-- CONDITION 2 (2 or more Cartelas): BINGO!, Refresh, and Leave (plus Add Board pre-start)
+                   shrunk to match the left column width and stacked neatly under the 1-75 Master Caller Board.
+                   When only 1 Cartela is active, this left stack is hidden and the full-width bottom bar renders instead. -->
+              <div id="left-stacked-actions-container" class="mt-1.5 space-y-1.5 shrink-0">
+                <button id="btn-claim-bingo-left" type="button" class="w-full bg-[#DB1A69] hover:bg-[#c4155c] active:scale-[0.99] text-white serif-heading font-extrabold text-sm py-2 rounded-full shadow-lg tracking-wider transition">
+                  BINGO!
+                </button>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button id="btn-active-refresh-left" type="button" class="bg-[#2584C6] hover:bg-[#1e6fa8] text-white serif-heading font-bold text-[11px] py-1.5 rounded-full shadow">
+                    Refresh
+                  </button>
+                  <button id="btn-active-leave-left" type="button" class="bg-[#D9531E] hover:bg-[#bf4718] text-white serif-heading font-bold text-[11px] py-1.5 rounded-full shadow">
+                    Leave
+                  </button>
+                </div>
+                <button id="btn-active-addboard-left" type="button" class="hidden w-full bg-[#FACC15] hover:bg-[#eab308] text-slate-900 serif-heading font-bold text-[11px] py-1.5 rounded-full shadow">
+                  Add Board
+                </button>
+              </div>
+            </div>
+
+            <!-- RIGHT SIDE: Dedicated to Countdown + Current Call (w/ Last 4 History) + Full-Size Cartela ScrollView -->
+            <div class="col-span-7 flex flex-col min-h-0">
+              <!-- Count Down Bar -->
+              <div class="edil-card rounded-xl px-3 py-1.5 flex items-center justify-between text-white serif-heading text-xs font-bold mb-1.5 shrink-0">
+                <span id="active-countdown-label">Count Down</span>
+                <span id="active-countdown">5s</span>
+              </div>
+
+              <!-- Current Call Box + Last 4 Called Numbers (`calledNumbers.slice(-5, -1)`) -->
+              <div class="bg-[#1A5E2A] rounded-xl px-3 py-2 shadow mb-1.5 shrink-0">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-white serif-heading text-xs font-bold">Current Call</div>
+                    <div id="active-voice-status" class="text-[10px] text-emerald-300 font-semibold mt-0.5">
+                      🔊 Announced: "G 54"
+                    </div>
+                  </div>
+                  <!-- Prominent Newest Drawn Number Circle -->
+                  <div id="active-current-call" class="w-11 h-11 rounded-full bg-[#16A34A] text-white font-extrabold text-xs flex items-center justify-center shadow-md ring-2 ring-[#FACC15]">
+                    G-54
+                  </div>
+                </div>
+
+                <!-- Previous 4 Called Numbers Row (`calledNumbers.slice(-5, -1)`) in Smaller Colored Circles -->
+                <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-white/15">
+                  <span class="text-[10px] text-white/85 serif-heading font-bold">Last 4:</span>
+                  <div id="previous-four-calls-row" class="flex items-center gap-1.5"></div>
+                </div>
+              </div>
+
+              <!-- Active Cartelas Header Strip -->
+              <div class="flex items-center justify-between px-1 mb-1 shrink-0">
+                <span id="active-boards-count-label" class="text-[11px] font-extrabold text-white serif-heading">
+                  Active Cartelas (2/4)
+                </span>
+                <span id="active-scroll-hint" class="text-[10px] font-bold text-[#FACC15]">
+                  ↕ Scroll full-size boards
+                </span>
+              </div>
+
+              <!-- FULL-HEIGHT RIGHT-SIDE SCROLLVIEW FOR NORMAL-SIZED CARTELAS -->
+              <!-- Stretches all the way down to the bottom of the screen when >=2 Cartelas are active! -->
+              <div id="active-cartelas-scrollview" class="flex-1 min-h-0 overflow-y-auto custom-scroll space-y-3 pr-0.5 pb-1">
+                <div id="active-player-grid" class="hidden"></div>
+                <div id="active-board-title" class="hidden">Board #44</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- =============================================================== -->
+          <!-- CONDITION 1 (Only 1 Cartela):                                   -->
+          <!-- Original, larger, full-width bottom layout for BINGO!, Refresh, -->
+          <!-- and Leave (plus Add Board pre-start). Hidden when >=2 Cartelas! -->
+          <!-- =============================================================== -->
+          <div id="fullwidth-bottom-actions-container" class="hidden mt-2 space-y-1.5 shrink-0">
+            <div id="bingo-btn-row">
+              <button id="btn-claim-bingo" type="button" class="w-full bg-[#DB1A69] hover:bg-[#c4155c] active:scale-[0.99] text-white serif-heading font-extrabold text-base py-2.5 rounded-full shadow-lg tracking-wider transition">
+                BINGO!
+              </button>
+            </div>
+
+            <div id="bottom-actions-grid" class="grid grid-cols-3 gap-2">
+              <button id="btn-active-refresh" type="button" class="bg-[#2584C6] hover:bg-[#1e6fa8] text-white serif-heading font-bold text-xs py-2.5 rounded-full shadow">
+                Refresh
+              </button>
+              <button id="btn-active-leave" type="button" class="bg-[#D9531E] hover:bg-[#bf4718] text-white serif-heading font-bold text-xs py-2.5 rounded-full shadow">
+                Leave
+              </button>
+              <button id="btn-active-addboard" type="button" class="bg-[#FACC15] hover:bg-[#eab308] text-slate-900 serif-heading font-bold text-xs py-2.5 rounded-full shadow">
+                Add Board
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- SCREEN 4: TOP 10 LEADERBOARD (SCORES TAB)                 -->
+        <!-- ========================================================= -->
+        <section id="screen-scores" class="hidden p-3.5 flex-1 flex flex-col">
+          <div class="flex items-center justify-center gap-2 my-2">
+            <span class="text-2xl">🏆</span>
+            <h2 class="text-white serif-heading font-bold text-xl tracking-wide">TOP 10 LEADERBOARD</h2>
+          </div>
+          <div id="leaderboard-list" class="space-y-2.5 pb-4"></div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- SCREEN 5: GAME & TRANSACTION HISTORY (HISTORY TAB)        -->
+        <!-- ========================================================= -->
+        <section id="screen-history" class="hidden p-3.5 flex-1 flex flex-col">
+          <div class="flex items-center justify-center gap-2 my-2">
+            <span class="text-2xl">📋</span>
+            <h2 class="text-white serif-heading font-bold text-xl">Game &amp; Wallet History</h2>
+          </div>
+          <div id="history-list" class="space-y-2.5 pb-4"></div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- SCREEN 6: MY WALLET & TRANSACTIONS (WALLET TAB)           -->
+        <!-- ========================================================= -->
+        <section id="screen-wallet" class="hidden p-3.5 flex-1 flex flex-col space-y-3.5">
+          <div class="flex items-center justify-center gap-2 mt-1">
+            <span class="text-2xl">💰</span>
+            <h2 class="text-white serif-heading font-bold text-xl">My Wallet &amp; Transactions</h2>
+          </div>
+
+          <div class="edil-card rounded-2xl p-4">
+            <div class="text-center text-white serif-heading font-bold text-sm mb-3">Account Balances</div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-black/15 rounded-xl py-3 px-2 text-center">
+                <div class="text-[11px] text-white/90 serif-heading uppercase">MAIN BALANCE</div>
+                <div id="wallet-main-val" class="text-base font-extrabold text-[#FACC15] serif-heading mt-1">7760.0 ETB</div>
+              </div>
+              <div class="bg-black/15 rounded-xl py-3 px-2 text-center">
+                <div class="text-[11px] text-white/90 serif-heading uppercase">BONUS BALANCE</div>
+                <div id="wallet-bonus-val" class="text-base font-extrabold text-[#FACC15] serif-heading mt-1">0.0 ETB</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="edil-card rounded-2xl p-4 space-y-2.5">
+            <div class="text-white serif-heading font-bold text-base flex items-center gap-2">
+              <span>📥</span>
+              <span>Deposit Money</span>
+            </div>
+
+            <div>
+              <label class="block text-xs text-white/90 serif-heading mb-1">Amount (Min: 50 ETB, Max: 1000 ETB)</label>
+              <input id="input-deposit-amount" type="number" min="50" max="1000" placeholder="Enter amount (50 - 1000)" class="w-full bg-white text-slate-900 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-white/90 serif-heading mb-1">Phone Number / Transaction ID</label>
+              <input id="input-deposit-ref" type="text" placeholder="Enter phone or TX ID" class="w-full bg-white text-slate-900 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none" />
+            </div>
+
+            <button id="btn-deposit-submit" type="button" class="w-full bg-[#16A34A] hover:bg-[#15803d] text-white serif-heading font-bold text-sm py-3 rounded-full shadow">
+              Deposit Now
+            </button>
+
+            <p class="text-[11px] text-white/90 serif-heading leading-snug">
+              ⚠️ Note: Minimum deposit is 50 ETB, and maximum deposit per transaction is 1000 ETB.
+            </p>
+          </div>
+
+          <div class="edil-card rounded-2xl p-4 space-y-2.5">
+            <div class="text-white serif-heading font-bold text-base flex items-center gap-2">
+              <span>📤</span>
+              <span>Withdraw Money</span>
+            </div>
+
+            <div>
+              <label class="block text-xs text-white/90 serif-heading mb-1">Withdrawal Amount (ETB)</label>
+              <input id="input-withdraw-amount" type="number" min="50" placeholder="Enter amount to withdraw" class="w-full bg-white text-slate-900 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none" />
+            </div>
+
+            <div>
+              <label class="block text-xs text-white/90 serif-heading mb-1">Phone Number</label>
+              <input id="input-withdraw-phone" type="tel" placeholder="09xxxxxxxx" class="w-full bg-white text-slate-900 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none" />
+            </div>
+
+            <button id="btn-withdraw-submit" type="button" class="w-full bg-[#E13D2D] hover:bg-[#c83224] text-white serif-heading font-bold text-sm py-3 rounded-full shadow">
+              Withdraw Now
+            </button>
+          </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- SCREEN 7: USER PROFILE SCREEN (PROFILE TAB)               -->
+        <!-- ========================================================= -->
+        <section id="screen-profile" class="hidden p-4 flex-1 flex flex-col items-center">
+          <div class="w-28 h-28 rounded-full bg-[#1A5E2A] border-[3px] border-[#FACC15] flex items-center justify-center shadow-lg mt-4">
+            <span class="text-5xl text-slate-800">👤</span>
+          </div>
+          <h2 class="text-white serif-heading font-bold text-xl mt-3 mb-6">Mayku12</h2>
+
+          <div class="w-full space-y-3.5">
+            <div class="edil-card rounded-2xl px-4 py-4 flex items-center justify-between">
+              <span class="text-white serif-heading font-bold text-sm">User ID / Telegram ID</span>
+              <span class="text-[#FACC15] serif-heading font-bold text-sm">#537485283</span>
+            </div>
+
+            <div class="edil-card rounded-2xl px-4 py-4 flex items-center justify-between">
+              <span class="text-white serif-heading font-bold text-sm">Main Balance</span>
+              <span id="profile-main-val" class="text-[#FACC15] serif-heading font-bold text-sm">7760.0 ETB</span>
+            </div>
+
+            <div class="edil-card rounded-2xl px-4 py-4 flex items-center justify-between">
+              <span class="text-white serif-heading font-bold text-sm">Bonus Balance</span>
+              <span id="profile-bonus-val" class="text-[#FACC15] serif-heading font-bold text-sm">0.0 ETB</span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- PERSISTENT 5-ICON BOTTOM NAVIGATION BAR (Game, Scores, History, Wallet, Profile) -->
+      <nav class="bg-white border-t border-slate-200 px-2 py-1.5 grid grid-cols-5 shrink-0">
+        <button id="nav-tab-game" type="button" class="flex flex-col items-center justify-center py-1 text-blue-600 font-bold">
+          <span class="text-lg leading-none">🎮</span>
+          <span class="text-[11px] serif-heading mt-1">Game</span>
+        </button>
+        <button id="nav-tab-scores" type="button" class="flex flex-col items-center justify-center py-1 text-slate-600 font-medium">
+          <span class="text-lg leading-none">🏆</span>
+          <span class="text-[11px] serif-heading mt-1">Scores</span>
+        </button>
+        <button id="nav-tab-history" type="button" class="flex flex-col items-center justify-center py-1 text-slate-600 font-medium">
+          <span class="text-lg leading-none">📋</span>
+          <span class="text-[11px] serif-heading mt-1">History</span>
+        </button>
+        <button id="nav-tab-wallet" type="button" class="flex flex-col items-center justify-center py-1 text-slate-600 font-medium">
+          <span class="text-lg leading-none">💰</span>
+          <span class="text-[11px] serif-heading mt-1">Wallet</span>
+        </button>
+        <button id="nav-tab-profile" type="button" class="flex flex-col items-center justify-center py-1 text-slate-600 font-medium">
+          <span class="text-lg leading-none">👤</span>
+          <span class="text-[11px] serif-heading mt-1">Profile</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- RIGHT PANEL: PRODUCTION FULL-STACK ARCHITECTURE & CODE VIEWER -->
+    <div id="code-inspector-panel" class="flex-1 w-full bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col shadow-xl" style="height: 820px;">
+      <!-- File Selector Tabs -->
+      <div class="bg-slate-950 border-b border-slate-800 p-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap gap-1.5" id="code-file-tabs">
+          <button type="button" data-file="ActiveGameScreen.tsx" class="code-tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 text-white">
+            ActiveGameScreen.tsx
+          </button>
+          <button type="button" data-file="CartelaCard.tsx" class="code-tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-amber-300 hover:bg-slate-700">
+            CartelaCard.tsx (Refactored)
+          </button>
+          <button type="button" data-file="useBingoStore.ts" class="code-tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">
+            useBingoStore.ts (Multi-Board)
+          </button>
+          <button type="button" data-file="WalletAndProfile.tsx" class="code-tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">
+            Wallet &amp; Leaderboard
+          </button>
+          <button type="button" data-file="BottomTabNavigator.tsx" class="code-tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">
+            BottomTabNavigator.tsx
+          </button>
+          <button type="button" data-file="LobbyScreen.tsx" class="code-tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">
+            LobbyScreen.tsx
+          </button>
+          <button type="button" data-file="CartelaSelectScreen.tsx" class="code-tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">
+            CartelaSelectScreen.tsx
+          </button>
+          <button type="button" data-file="server.ts" class="code-tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">
+            Backend: Socket.io + Fairness
+          </button>
+        </div>
+
+        <button id="btn-copy-code" type="button" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700">
+          Copy Code
+        </button>
+      </div>
+
+      <!-- Architecture Summary Banner -->
+      <div class="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 text-xs text-slate-300 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <span class="font-bold text-white">Try the 2 New Updates on the Left:</span>
+          1) <span class="text-orange-400 font-semibold">Past Calls = Orange (#F97316)</span> vs. <span class="text-emerald-400 font-semibold">Current Call = Green (#16A34A)</span> on the 1-75 Master Board,
+          2) Click <span class="text-indigo-300 font-semibold">⇄ 1 vs 2 Boards</span> (or <span class="text-emerald-300 font-semibold">↺ Reset Pre-Call</span> then <span class="text-amber-300 font-semibold">Add Board</span>) to see <span class="text-pink-400 font-semibold">BINGO!, Refresh &amp; Leave</span> stack under the left caller board when 2+ Cartelas are active!
+        </div>
+        <span id="current-file-label" class="mono-code text-[11px] text-amber-400">mobile/src/screens/ActiveGameScreen.tsx</span>
+      </div>
+
+      <!-- Code Content Pre -->
+      <pre class="flex-1 p-4 overflow-auto custom-scroll text-xs leading-relaxed mono-code text-emerald-100 bg-slate-950/70 select-all"><code id="code-display-block"></code></pre>
+    </div>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // 1. DETERMINISTIC CARTELA GENERATOR & BINGO BALL COLOR/LABEL FORMATTERS
+    // =========================================================================
+    function mulberry32(seed) {
+      return function () {
+        let t = (seed += 0x6d2b79f5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function getBingoCallLabel(num) {
+      if (num >= 1 && num <= 15) return `B ${num}`;
+      if (num >= 16 && num <= 30) return `I ${num}`;
+      if (num >= 31 && num <= 45) return `N ${num}`;
+      if (num >= 46 && num <= 60) return `G ${num}`;
+      return `O ${num}`;
+    }
+
+    function getBingoBallColor(num) {
+      if (num >= 1 && num <= 15) return '#F5B82E'; // B: Gold
+      if (num >= 16 && num <= 30) return '#E11D62'; // I: Pink-Red
+      if (num >= 31 && num <= 45) return '#1CA1E3'; // N: Sky Blue
+      if (num >= 46 && num <= 60) return '#F04E23'; // G: Orange-Red
+      return '#36B368'; // O: Emerald Green
+    }
+
+    function getCartelaBoard(boardNum) {
+      if (boardNum === 48) {
+        return [
+          [9, 28, 32, 60, 65],
+          [12, 18, 36, 48, 62],
+          [7, 17, 'FREE', 50, 73],
+          [4, 24, 41, 54, 68],
+          [6, 30, 35, 59, 66]
+        ];
+      }
+      if (boardNum === 44) {
+        return [
+          [7, 18, 34, 48, 72],
+          [9, 22, 32, 58, 71],
+          [14, 19, 'FREE', 54, 67],
+          [12, 20, 31, 57, 70],
+          [2, 16, 44, 50, 73]
+        ];
+      }
+      const rand = mulberry32(boardNum * 9973 + 1337);
+      const ranges = [[1, 15], [16, 30], [31, 45], [46, 60], [61, 75]];
+      const cols = ranges.map(([min, max]) => {
+        const pool = [];
+        for (let n = min; n <= max; n++) pool.push(n);
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(rand() * (i + 1));
+          const tmp = pool[i];
+          pool[i] = pool[j];
+          pool[j] = tmp;
+        }
+        return pool.slice(0, 5);
+      });
+      const grid = [];
+      for (let r = 0; r < 5; r++) {
+        const row = [];
+        for (let c = 0; c < 5; c++) {
+          row.push(r === 2 && c === 2 ? 'FREE' : cols[c][r]);
+        }
+        grid.push(row);
+      }
+      return grid;
+    }
+
+    // =========================================================================
+    // 2. APPLICATION STATE (Pre-populated with 2 Cartelas & 5 Calls so user
+    //    immediately sees Green vs Orange Master Board + Left-Stacked Buttons)
+    // =========================================================================
+    const state = {
+      activeTab: 'Game',
+      gameStage: 'ACTIVE',
+      mainBalance: 7760.0,
+      bonusBalance: 0.0,
+      soundOn: true,
+      rooms: [
+        { id: 'room-10', stake: 10, winPot: 20, players: 2, jackpot: 3.0, jackpotMax: 500, status: 'PLAYING' },
+        { id: 'room-20', stake: 20, winPot: 0, players: 0, jackpot: 0.0, jackpotMax: 1000, status: 'ACTIVE 0 READY' },
+        { id: 'room-50', stake: 50, winPot: 0, players: 0, jackpot: 0.0, jackpotMax: 2500, status: 'ACTIVE 0 READY' },
+        { id: 'room-100', stake: 100, winPot: 0, players: 0, jackpot: 0.0, jackpotMax: 5000, status: 'ACTIVE 0 READY' },
+        { id: 'room-free', stake: 0, isPractice: true, winPot: 0, players: 1, jackpot: 0, jackpotMax: 0, status: 'OPEN' }
+      ],
+      selectedCartelas: [44, 48],
+      pendingCartelaSelection: 199,
+      isAppendingFromActiveGame: false,
+      gameId: 'P1',
+      stake: 10,
+      derash: 25,
+      playersCount: 2,
+      gameStatus: 'playing',
+      phase: 'IN_PROGRESS',
+      preStartCountdown: 0,
+      callIntervalCountdown: 5,
+      currentCall: 54, // Highlighted in GREEN (#16A34A) on Master Board
+      calledNumbers: [7, 18, 34, 48, 54], // 7, 18, 34, 48 highlighted in ORANGE (#F97316) on Master Board
+      markedCells: {
+        44: ['2-2', '0-0', '0-1', '0-2', '0-3'],
+        48: ['2-2', '1-1', '1-3'],
+        199: ['2-2']
+      },
+      leaderboard: [
+        { rank: 1, username: 'None', wins: 3 },
+        { rank: 2, username: 'Mayku12', wins: 1 },
+        { rank: 3, username: 'Player_970532', wins: 0 },
+        { rank: 4, username: 'Player_706768', wins: 0 },
+        { rank: 5, username: 'Player_683361', wins: 0 },
+        { rank: 6, username: 'Player_926967', wins: 0 },
+        { rank: 7, username: 'Miracle_han', wins: 0 },
+        { rank: 8, username: 'ĚĐÒ', wins: 0 },
+        { rank: 9, username: 'Player_743926', wins: 0 },
+        { rank: 10, username: 'Player_248547', wins: 0 }
+      ],
+      history: [
+        { id: 'TX-901', type: 'DEPOSIT', amount: 1000.0, ref: 'Telebirr #8839201', date: '2026-10-18 09:40' },
+        { id: 'TX-902', type: 'WIN', amount: 170.0, ref: 'Game P1 • Board #44', date: '2026-10-18 10:15' }
+      ]
+    };
+
+    let audioCtx = null;
+    function playTone(freq, duration) {
+      if (!state.soundOn) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function speakBingoCall(textToSpeak) {
+      if (!state.soundOn) return;
+      try {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(textToSpeak);
+          utterance.lang = 'en-US';
+          utterance.rate = 0.92;
+          utterance.pitch = 1.05;
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (e) {}
+    }
+
+    function showToast(msg, isError) {
+      const el = document.getElementById('mobile-toast');
+      el.textContent = msg;
+      el.className = `text-white text-xs font-bold px-3 py-2 text-center transition-all shrink-0 ${
+        isError ? 'bg-red-700' : 'bg-slate-900'
+      }`;
+      el.classList.remove('hidden');
+      setTimeout(() => {
+        el.classList.add('hidden');
+      }, 3600);
+    }
+
+    // =========================================================================
+    // 3. RENDERERS FOR ALL SCREENS
+    // =========================================================================
+    function syncWalletLabels() {
+      document.getElementById('lobby-balance-val').textContent = state.mainBalance.toFixed(1);
+      document.getElementById('lobby-bonus-val').textContent = state.bonusBalance.toFixed(1);
+      document.getElementById('cartela-wallet-val').textContent = state.mainBalance.toFixed(1);
+      document.getElementById('cartela-bonus-val').textContent = state.bonusBalance.toFixed(1);
+      document.getElementById('wallet-main-val').textContent = `${state.mainBalance.toFixed(1)} ETB`;
+      document.getElementById('wallet-bonus-val').textContent = `${state.bonusBalance.toFixed(1)} ETB`;
+      document.getElementById('profile-main-val').textContent = `${state.mainBalance.toFixed(1)} ETB`;
+      document.getElementById('profile-bonus-val').textContent = `${state.bonusBalance.toFixed(1)} ETB`;
+    }
+
+    function renderLobby() {
+      syncWalletLabels();
+      const container = document.getElementById('lobby-rooms-list');
+      container.innerHTML = '';
+
+      state.rooms.forEach((room) => {
+        const card = document.createElement('div');
+        card.className = 'edil-card rounded-2xl overflow-hidden';
+
+        if (room.isPractice) {
+          card.innerHTML = `
+            <div class="p-4 flex items-center justify-between">
+              <div>
+                <div class="text-white serif-heading font-bold text-base">FREE Practice Mode</div>
+                <div class="text-white/85 serif-heading text-xs mt-0.5">No real money</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="bg-white/25 text-white serif-heading text-xs font-bold px-3.5 py-2 rounded-full">OPEN</span>
+                <button type="button" data-room="${room.id}" class="join-room-btn bg-[#1E293B] hover:bg-slate-800 text-white serif-heading text-xs font-bold px-5 py-2.5 rounded-full shadow">
+                  TRY
+                </button>
+              </div>
+            </div>
+          `;
+        } else {
+          const isPlaying = room.status === 'PLAYING';
+          const badgeClass = isPlaying ? 'bg-[#F97316]' : 'bg-[#34D399]';
+          card.innerHTML = `
+            <div class="px-4 py-3 flex items-center justify-between">
+              <div>
+                <div class="text-white serif-heading font-extrabold text-2xl leading-none">${room.stake}</div>
+                <div class="text-white/90 serif-heading text-xs mt-1">ETB</div>
+              </div>
+              <div class="text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <span class="text-xl">🏆</span>
+                  <span class="text-[#FACC15] serif-heading font-extrabold text-xl">${room.winPot}</span>
+                </div>
+                <div class="text-white/90 serif-heading text-xs mt-0.5">${room.players} players</div>
+              </div>
+              <div class="flex flex-col items-end gap-1.5">
+                <span class="${badgeClass} text-white serif-heading text-[10px] font-bold px-2.5 py-0.5 rounded-md">
+                  ${room.status}
+                </span>
+                <button type="button" data-room="${room.id}" class="join-room-btn bg-[#16A34A] hover:bg-[#15803d] text-white serif-heading text-xs font-bold px-6 py-2 rounded-full shadow">
+                  JOIN
+                </button>
+              </div>
+            </div>
+            <div class="bg-[#5A9431] py-1 text-center text-[10px] font-bold text-white serif-heading">
+              JACKPOT ${room.jackpot.toFixed(1)} / ${room.jackpotMax}
+            </div>
+          `;
+        }
+        container.appendChild(card);
+      });
+
+      container.querySelectorAll('.join-room-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const roomId = btn.getAttribute('data-room');
+          const room = state.rooms.find((r) => r.id === roomId);
+          if (!room) return;
+          state.stake = room.stake;
+          state.gameId = room.stake === 10 || room.isPractice ? 'P1' : '#2';
+          state.derash = room.stake > 0 ? Math.round(room.stake * 2 * 0.85) : 17;
+          state.selectedCartelas = [48];
+          navigateToScreen('CARTELA');
+        });
+      });
+    }
+
+    function renderCartelaSelection() {
+      syncWalletLabels();
+      document.getElementById('cartela-gameid-val').textContent = state.gameId;
+      document.getElementById('cartela-stake-val').textContent = state.stake;
+      document.getElementById('cartela-hash-id').textContent = state.gameId;
+      document.getElementById('cartela-count-label').textContent = `${state.selectedCartelas.length}/4`;
+
+      const candidateNum =
+        state.pendingCartelaSelection ||
+        state.selectedCartelas[state.selectedCartelas.length - 1] ||
+        48;
+
+      const grid200 = document.getElementById('cartela-200-grid');
+      grid200.innerHTML = '';
+      for (let num = 1; num <= 200; num++) {
+        const isActiveBoard = state.selectedCartelas.includes(num);
+        const isCandidate = candidateNum === num;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = num;
+        btn.className = `aspect-square rounded-lg text-xs font-bold serif-heading flex items-center justify-center shadow-sm transition ${
+          isCandidate
+            ? 'bg-[#FF6B00] text-white ring-2 ring-[#FACC15]'
+            : isActiveBoard
+            ? 'bg-[#16A34A] text-white ring-2 ring-white'
+            : 'bg-white text-slate-900 hover:bg-slate-100'
+        }`;
+        btn.addEventListener('click', () => {
+          // Select & preview board on the 5x5 preview card; pressing "Start Game" appends & navigates back
+          state.pendingCartelaSelection = num;
+          renderCartelaSelection();
+          showToast(`Selected Board #${num} — click "Start Game" to append (${state.selectedCartelas.length}/4 active)!`);
+        });
+        grid200.appendChild(btn);
+      }
+
+      const previewNum = candidateNum;
+      document.getElementById('cartela-preview-title').textContent = `#${previewNum}`;
+      const previewGridEl = document.getElementById('cartela-preview-grid');
+      previewGridEl.innerHTML = '';
+      const matrix = getCartelaBoard(previewNum);
+      matrix.forEach((row) => {
+        row.forEach((cell) => {
+          const d = document.createElement('div');
+          const isFree = cell === 'FREE';
+          d.className = `aspect-square rounded text-[10px] font-bold serif-heading flex items-center justify-center ${
+            isFree ? 'bg-[#16A34A] text-white' : 'bg-white text-slate-900'
+          }`;
+          d.textContent = isFree ? '★' : cell;
+          previewGridEl.appendChild(d);
+        });
+      });
+    }
+
+    function renderActiveGame() {
+      const hasGameStarted =
+        state.phase === 'IN_PROGRESS' ||
+        state.calledNumbers.length > 0 ||
+        state.currentCall !== null;
+      const hasMultipleCartelas = state.selectedCartelas.length >= 2;
+
+      document.getElementById('active-game-id').textContent = state.gameId;
+      document.getElementById('active-derash').textContent = state.derash;
+      document.getElementById('active-players').textContent = state.playersCount;
+      document.getElementById('active-stake').textContent = state.stake;
+      document.getElementById('active-call-count').textContent = state.calledNumbers.length;
+      document.getElementById('active-sound-label').textContent = state.soundOn ? 'ON' : 'OFF';
+
+      // Countdown Bar
+      const cdLabelEl = document.getElementById('active-countdown-label');
+      const cdValEl = document.getElementById('active-countdown');
+      if (state.phase === 'STARTING_COUNTDOWN') {
+        cdLabelEl.textContent = 'Start In (2 Players)';
+        cdValEl.textContent = `${state.preStartCountdown}s`;
+      } else if (state.phase === 'IN_PROGRESS') {
+        cdLabelEl.textContent = 'Next Call (5s Auto)';
+        cdValEl.textContent = `${state.callIntervalCountdown}s`;
+      } else {
+        cdLabelEl.textContent = 'Round Status';
+        cdValEl.textContent = 'Ended';
+      }
+
+      // Current Call Prominent Display
+      const callLabel = state.currentCall !== null ? getBingoCallLabel(state.currentCall) : null;
+      document.getElementById('active-current-call').textContent =
+        callLabel ? callLabel.replace(' ', '-') : '--';
+      document.getElementById('active-voice-status').textContent =
+        callLabel
+          ? `🔊 Announced: "${callLabel}"`
+          : `🔊 Starts in ${state.preStartCountdown}s`;
+
+      // Render Previous 4 Called Numbers (`calledNumbers.slice(-5, -1)`) in Smaller Colored Circles
+      const prevRowEl = document.getElementById('previous-four-calls-row');
+      prevRowEl.innerHTML = '';
+      const previousFourCalls = state.calledNumbers.slice(-5, -1);
+      if (previousFourCalls.length === 0) {
+        const emptySpan = document.createElement('span');
+        emptySpan.className = 'text-[10px] text-white/55 italic';
+        emptySpan.textContent = 'None yet';
+        prevRowEl.appendChild(emptySpan);
+      } else {
+        previousFourCalls.forEach((pastNum) => {
+          const badge = document.createElement('span');
+          badge.className =
+            'w-6 h-6 rounded-full text-white text-[9.5px] font-extrabold flex items-center justify-center shadow-sm serif-heading';
+          badge.style.backgroundColor = getBingoBallColor(pastNum);
+          badge.textContent = getBingoCallLabel(pastNum).replace(' ', '');
+          prevRowEl.appendChild(badge);
+        });
+      }
+
+      // Update Cartela Counter & Scroll Hint
+      document.getElementById('active-boards-count-label').textContent =
+        `Active Cartelas (${state.selectedCartelas.length}/4)`;
+      document.getElementById('active-scroll-hint').textContent =
+        hasMultipleCartelas
+          ? `↕ Scroll ${state.selectedCartelas.length} boards (Right side open)`
+          : '1 board (Full-width bottom buttons)';
+
+      // =====================================================================
+      // Requirement 2: Dynamic Bottom Buttons Layout (BINGO, Refresh, Leave)
+      // - Condition 1 (Only 1 Cartela): Show full-width bottom buttons (`fullwidth-bottom-actions-container`), hide left stack.
+      // - Condition 2 (2 or more Cartelas): Hide full-width bottom bar so NO buttons exist on the bottom right;
+      //   show `left-stacked-actions-container` neatly stacked under the 1-75 caller board on the left!
+      // =====================================================================
+      const leftStackContainer = document.getElementById('left-stacked-actions-container');
+      const fullWidthBottomContainer = document.getElementById('fullwidth-bottom-actions-container');
+      const addBoardFullBtn = document.getElementById('btn-active-addboard');
+      const addBoardLeftBtn = document.getElementById('btn-active-addboard-left');
+      const bottomGrid = document.getElementById('bottom-actions-grid');
+
+      if (hasMultipleCartelas) {
+        leftStackContainer.classList.remove('hidden');
+        fullWidthBottomContainer.classList.add('hidden');
+
+        if (hasGameStarted) {
+          addBoardLeftBtn.classList.add('hidden');
+        } else {
+          addBoardLeftBtn.classList.remove('hidden');
+          if (state.selectedCartelas.length >= 4) {
+            addBoardLeftBtn.textContent = 'Max 4 Boards';
+            addBoardLeftBtn.className =
+              'w-full bg-slate-400 text-slate-800 serif-heading font-bold text-[11px] py-1.5 rounded-full shadow cursor-not-allowed';
+          } else {
+            addBoardLeftBtn.textContent = `Add Board (${state.selectedCartelas.length}/4)`;
+            addBoardLeftBtn.className =
+              'w-full bg-[#FACC15] hover:bg-[#eab308] text-slate-900 serif-heading font-bold text-[11px] py-1.5 rounded-full shadow';
+          }
+        }
+      } else {
+        leftStackContainer.classList.add('hidden');
+        fullWidthBottomContainer.classList.remove('hidden');
+
+        if (hasGameStarted) {
+          addBoardFullBtn.classList.add('hidden');
+          bottomGrid.className = 'grid grid-cols-2 gap-2';
+        } else {
+          addBoardFullBtn.classList.remove('hidden');
+          bottomGrid.className = 'grid grid-cols-3 gap-2';
+          addBoardFullBtn.textContent = 'Add Board';
+        }
+      }
+
+      // =====================================================================
+      // Requirement 1: Master Board Color Coding (Orange vs. Green)
+      // - Most recently called number (num === state.currentCall): Green (#16A34A)
+      // - All past/previously called numbers (state.calledNumbers.includes(num)): Orange (#F97316)
+      // - Uncalled numbers: Default Green (#73B244)
+      // =====================================================================
+      const callerEl = document.getElementById('caller-75-grid');
+      callerEl.innerHTML = '';
+      for (let r = 0; r < 15; r++) {
+        for (let c = 0; c < 5; c++) {
+          const num = c * 15 + r + 1;
+          const isCurrentCall = num === state.currentCall;
+          const isPastCalled = state.calledNumbers.includes(num);
+
+          const cell = document.createElement('div');
+          if (isCurrentCall) {
+            // Most recently called number highlighted in GREEN
+            cell.className =
+              'rounded text-[10.5px] font-extrabold serif-heading flex items-center justify-center py-0.5 bg-[#16A34A] text-white ring-2 ring-white shadow-md scale-[1.03]';
+          } else if (isPastCalled) {
+            // Previously called numbers highlighted in ORANGE
+            cell.className =
+              'rounded text-[10.5px] font-bold serif-heading flex items-center justify-center py-0.5 bg-[#F97316] text-white shadow-sm';
+          } else {
+            // Uncalled default cell
+            cell.className =
+              'rounded text-[10.5px] font-bold serif-heading flex items-center justify-center py-0.5 bg-[#73B244] text-white';
+          }
+          cell.textContent = num;
+          callerEl.appendChild(cell);
+        }
+      }
+
+      // Render Full-Size, Unshrunk Cartelas in the Right-Side ScrollView
+      const scrollContainer = document.getElementById('active-cartelas-scrollview');
+      scrollContainer.innerHTML = '';
+
+      state.selectedCartelas.forEach((boardNum, idx) => {
+        if (!state.markedCells[boardNum]) {
+          state.markedCells[boardNum] = ['2-2'];
+        }
+        const marked = state.markedCells[boardNum];
+        const matrix = getCartelaBoard(boardNum);
+
+        const cardEl = document.createElement('div');
+        cardEl.className =
+          'fullsize-cartela-card bg-white rounded-2xl p-2.5 shadow-md flex flex-col justify-between border border-slate-100';
+
+        // 1. Distinct 5-Column B-I-N-G-O Header Row
+        const headerEl = document.createElement('div');
+        headerEl.className = 'grid grid-cols-5 gap-1.5 w-full justify-items-center mb-2';
+        headerEl.innerHTML = `
+          <span class="w-7 h-7 rounded-full bg-[#F5B82E] text-white text-xs font-extrabold flex items-center justify-center serif-heading shadow-sm">B</span>
+          <span class="w-7 h-7 rounded-full bg-[#E11D62] text-white text-xs font-extrabold flex items-center justify-center serif-heading shadow-sm">I</span>
+          <span class="w-7 h-7 rounded-full bg-[#1CA1E3] text-white text-xs font-extrabold flex items-center justify-center serif-heading shadow-sm">N</span>
+          <span class="w-7 h-7 rounded-full bg-[#F04E23] text-white text-xs font-extrabold flex items-center justify-center serif-heading shadow-sm">G</span>
+          <span class="w-7 h-7 rounded-full bg-[#36B368] text-white text-xs font-extrabold flex items-center justify-center serif-heading shadow-sm">O</span>
+        `;
+        cardEl.appendChild(headerEl);
+
+        // 2. Full-Size 5x5 Number Grid
+        const gridEl = document.createElement('div');
+        if (idx === 0) gridEl.id = 'active-player-grid';
+        gridEl.className = 'grid grid-cols-5 gap-1.5 w-full';
+
+        matrix.forEach((row, rIdx) => {
+          row.forEach((val, cIdx) => {
+            const key = `${rIdx}-${cIdx}`;
+            const isFree = val === 'FREE';
+            const isMarked = marked.includes(key);
+            const isCalled = typeof val === 'number' && state.calledNumbers.includes(val);
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `aspect-square rounded-lg font-extrabold text-sm serif-heading flex items-center justify-center border transition ${
+              isFree
+                ? 'bg-slate-50 border-slate-200'
+                : isMarked
+                ? 'bg-[#16A34A] text-white border-[#16A34A] shadow-inner'
+                : isCalled
+                ? 'bg-amber-50 text-slate-900 border-amber-400 border-2'
+                : 'bg-slate-50 text-slate-900 border-slate-200/80 hover:bg-slate-100'
+            }`;
+
+            if (isFree) {
+              btn.innerHTML = `<span class="w-7 h-7 rounded-full bg-[#16A34A] text-white flex items-center justify-center text-sm shadow">★</span>`;
+            } else {
+              btn.textContent = val;
+            }
+
+            btn.addEventListener('click', () => {
+              if (isFree) return;
+              const list = state.markedCells[boardNum] || ['2-2'];
+              const existingIdx = list.indexOf(key);
+              if (existingIdx > -1) list.splice(existingIdx, 1);
+              else list.push(key);
+              state.markedCells[boardNum] = list;
+              playTone(520, 0.08);
+              renderActiveGame();
+            });
+
+            gridEl.appendChild(btn);
+          });
+        });
+
+        cardEl.appendChild(gridEl);
+
+        // 3. Bottom Centered Cartela ID Footer ("Board #XX") below the 5x5 grid
+        const footerEl = document.createElement('div');
+        if (idx === 0) footerEl.id = 'active-board-title';
+        footerEl.className = 'text-center text-xs font-extrabold text-slate-800 serif-heading mt-2 leading-none';
+        footerEl.textContent = `Board #${boardNum}`;
+        cardEl.appendChild(footerEl);
+
+        scrollContainer.appendChild(cardEl);
+      });
+    }
+
+    function renderLeaderboard() {
+      const container = document.getElementById('leaderboard-list');
+      container.innerHTML = '';
+      state.leaderboard.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'edil-card rounded-2xl px-3.5 py-2.5 flex items-center justify-between';
+        row.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-full bg-[#FACC15] text-slate-900 serif-heading font-bold text-xs flex items-center justify-center shadow">
+              ${item.rank}
+            </span>
+            <span class="text-base">👤</span>
+            <span class="text-white serif-heading font-bold text-sm">${item.username}</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-base">⭐</span>
+            <span class="text-[#FACC15] serif-heading font-bold text-sm">${item.wins} Wins</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('history-list');
+      container.innerHTML = '';
+      state.history.forEach((tx) => {
+        const isOut = tx.type === 'WITHDRAW' || tx.type === 'STAKE';
+        const row = document.createElement('div');
+        row.className = 'edil-card rounded-2xl px-4 py-3 flex items-center justify-between';
+        row.innerHTML = `
+          <div>
+            <div class="text-white serif-heading font-bold text-sm">${tx.type}</div>
+            <div class="text-white/85 text-xs mt-0.5">${tx.ref}</div>
+            <div class="text-white/70 text-[10px] mt-0.5">${tx.date}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[#FACC15] serif-heading font-extrabold text-sm">
+              ${isOut ? '-' : '+'}${tx.amount.toFixed(1)} ETB
+            </div>
+            <div class="text-[10px] font-bold text-white/90 mt-0.5">COMPLETED</div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // =========================================================================
+    // 4. NAVIGATION, 30s START COUNTDOWN & 5-SECOND AUTO CALLER LOOP
+    // =========================================================================
+    function navigateToScreen(target) {
+      const sections = ['lobby', 'cartela', 'active', 'scores', 'history', 'wallet', 'profile'];
+      sections.forEach((s) => {
+        document.getElementById(`screen-${s}`).classList.add('hidden');
+      });
+
+      if (target === 'LOBBY') {
+        state.activeTab = 'Game';
+        state.gameStage = 'LOBBY';
+        document.getElementById('screen-lobby').classList.remove('hidden');
+        renderLobby();
+      } else if (target === 'CARTELA') {
+        state.activeTab = 'Game';
+        state.gameStage = 'CARTELA';
+        document.getElementById('screen-cartela').classList.remove('hidden');
+        renderCartelaSelection();
+      } else if (target === 'ACTIVE') {
+        state.activeTab = 'Game';
+        state.gameStage = 'ACTIVE';
+        document.getElementById('screen-active').classList.remove('hidden');
+        renderActiveGame();
+      } else if (target === 'SCORES') {
+        state.activeTab = 'Scores';
+        document.getElementById('screen-scores').classList.remove('hidden');
+        renderLeaderboard();
+      } else if (target === 'HISTORY') {
+        state.activeTab = 'History';
+        document.getElementById('screen-history').classList.remove('hidden');
+        renderHistory();
+      } else if (target === 'WALLET') {
+        state.activeTab = 'Wallet';
+        document.getElementById('screen-wallet').classList.remove('hidden');
+        syncWalletLabels();
+      } else if (target === 'PROFILE') {
+        state.activeTab = 'Profile';
+        document.getElementById('screen-profile').classList.remove('hidden');
+        syncWalletLabels();
+      }
+
+      const tabMap = {
+        Game: 'nav-tab-game',
+        Scores: 'nav-tab-scores',
+        History: 'nav-tab-history',
+        Wallet: 'nav-tab-wallet',
+        Profile: 'nav-tab-profile'
+      };
+      Object.entries(tabMap).forEach(([tabName, elId]) => {
+        const btn = document.getElementById(elId);
+        if (state.activeTab === tabName) {
+          btn.className = 'flex flex-col items-center justify-center py-1 text-blue-600 font-bold';
+        } else {
+          btn.className = 'flex flex-col items-center justify-center py-1 text-slate-600 font-medium';
+        }
+      });
+    }
+
+    function callNextBingoNumber() {
+      if (state.phase === 'ENDED' || state.gameStatus === 'ended') return;
+      const wasFirstCall = state.calledNumbers.length === 0;
+      state.phase = 'IN_PROGRESS';
+      state.gameStatus = 'playing';
+      state.preStartCountdown = 0;
+      state.callIntervalCountdown = 5;
+
+      const firstBoard = getCartelaBoard(state.selectedCartelas[0] || 44);
+      const boardNumbers = [];
+      firstBoard.forEach((row) =>
+        row.forEach((n) => {
+          if (typeof n === 'number' && !state.calledNumbers.includes(n)) boardNumbers.push(n);
+        })
+      );
+
+      let nextBall;
+      if (boardNumbers.length > 0 && Math.random() < 0.65) {
+        nextBall = boardNumbers[Math.floor(Math.random() * boardNumbers.length)];
+      } else {
+        const pool = [];
+        for (let i = 1; i <= 75; i++) {
+          if (!state.calledNumbers.includes(i)) pool.push(i);
+        }
+        if (pool.length === 0) {
+          state.phase = 'ENDED';
+          return;
+        }
+        nextBall = pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      state.calledNumbers.push(nextBall);
+      state.currentCall = nextBall;
+
+      const spokenLabel = getBingoCallLabel(nextBall);
+      playTone(660, 0.12);
+      speakBingoCall(spokenLabel);
+
+      if (wasFirstCall) {
+        showToast(`🔊 Game Officially Started! Calling every 5s: "${spokenLabel}"`);
+      }
+
+      if (state.gameStage === 'ACTIVE' && state.activeTab === 'Game') {
+        renderActiveGame();
+      }
+    }
+
+    // Strict Multiplayer Timer Engine:
+    // Condition: Whenever playersCount >= 2 AND game has not started -> 30s countdown -> 'playing' & 5s ball caller
+    setInterval(() => {
+      if (state.phase === 'ENDED' || state.gameStatus === 'ended') return;
+
+      // Strict condition: playersCount >= 2 and game has not yet started
+      if (
+        state.playersCount >= 2 &&
+        (state.gameStatus === 'waiting' || state.phase === 'WAITING_FOR_PLAYERS')
+      ) {
+        state.phase = 'STARTING_COUNTDOWN';
+        state.gameStatus = 'countdown';
+        state.preStartCountdown = 30;
+      }
+
+      if (state.phase === 'STARTING_COUNTDOWN' || state.gameStatus === 'countdown') {
+        if (state.preStartCountdown <= 1) {
+          state.preStartCountdown = 0;
+          state.phase = 'IN_PROGRESS';
+          state.gameStatus = 'playing';
+          callNextBingoNumber();
+        } else {
+          state.preStartCountdown -= 1;
+          const cdEl = document.getElementById('active-countdown');
+          const voiceEl = document.getElementById('active-voice-status');
+          if (cdEl) cdEl.textContent = `${state.preStartCountdown}s`;
+          if (voiceEl) {
+            voiceEl.textContent = `🔊 Starts in ${state.preStartCountdown}s`;
+          }
+        }
+      } else if (state.phase === 'IN_PROGRESS') {
+        if (state.callIntervalCountdown <= 1) {
+          callNextBingoNumber();
+        } else {
+          state.callIntervalCountdown -= 1;
+          const cdEl = document.getElementById('active-countdown');
+          if (cdEl) cdEl.textContent = `${state.callIntervalCountdown}s`;
+        }
+      }
+    }, 1000);
+
+    // =========================================================================
+    // 5. SERVER-SIDE WIN VERIFICATION & SHARED ACTION HANDLERS
+    // =========================================================================
+    function verifyAnyBoardWin() {
+      const calledSet = new Set(state.calledNumbers);
+
+      for (const boardNum of state.selectedCartelas) {
+        const grid = getCartelaBoard(boardNum);
+        const marked = state.markedCells[boardNum] || ['2-2'];
+
+        const cellValid = (r, c) => {
+          if (r === 2 && c === 2) return true;
+          const val = grid[r][c];
+          return calledSet.has(val) && marked.includes(`${r}-${c}`);
+        };
+
+        for (let r = 0; r < 5; r++) {
+          if ([0, 1, 2, 3, 4].every((c) => cellValid(r, c))) {
+            return { boardNum, pattern: `Row ${r + 1}` };
+          }
+        }
+        for (let c = 0; c < 5; c++) {
+          if ([0, 1, 2, 3, 4].every((r) => cellValid(r, c))) {
+            return { boardNum, pattern: `Column ${c + 1}` };
+          }
+        }
+        if ([0, 1, 2, 3, 4].every((i) => cellValid(i, i))) {
+          return { boardNum, pattern: 'Main Diagonal' };
+        }
+        if ([0, 1, 2, 3, 4].every((i) => cellValid(i, 4 - i))) {
+          return { boardNum, pattern: 'Cross Diagonal' };
+        }
+      }
+      return null;
+    }
+
+    function handleAddBoardAction() {
+      if (state.phase === 'IN_PROGRESS' || state.calledNumbers.length > 0 || state.currentCall !== null) {
+        showToast('Game has officially started! Cannot add boards after countdown ends.', true);
+        return;
+      }
+      if (state.selectedCartelas.length >= 4) {
+        showToast('Maximum of 4 Cartelas reached!', true);
+        return;
+      }
+      if (state.stake > state.mainBalance) {
+        showToast('Insufficient wallet balance to add another Cartela.', true);
+        return;
+      }
+
+      // Navigate to Cartela Select screen in APPEND mode; pre-select an available candidate board
+      const nextCandidate = [48, 199, 12, 77, 105].find((id) => !state.selectedCartelas.includes(id)) || 48;
+      state.pendingCartelaSelection = nextCandidate;
+      state.isAppendingFromActiveGame = true;
+      navigateToScreen('CARTELA');
+      showToast('Pick a board (1-200) and click "Start Game" to append it to your active boards!');
+    }
+
+    function handleClaimBingoAction() {
+      const winResult = verifyAnyBoardWin();
+      if (!winResult) {
+        playTone(220, 0.25);
+        showToast(
+          `Backend Verification Failed: Mark 5 called numbers in a row, column, or diagonal on any of your boards!`,
+          true
+        );
+        return;
+      }
+      state.phase = 'ENDED';
+      playTone(880, 0.35);
+      speakBingoCall('Bingo! Congratulations, you won!');
+      state.mainBalance = +(state.mainBalance + state.derash).toFixed(1);
+      state.leaderboard[1].wins += 1;
+      state.history.unshift({
+        id: `TX-${Date.now().toString().slice(-3)}`,
+        type: 'WIN',
+        amount: state.derash,
+        ref: `Game ${state.gameId} • Board #${winResult.boardNum} (${winResult.pattern})`,
+        date: 'Just now'
+      });
+      syncWalletLabels();
+      renderActiveGame();
+      showToast(`🎉 BINGO VERIFIED on Board #${winResult.boardNum} (${winResult.pattern})! +${state.derash} ETB!`);
+    }
+
+    // Attach UI Listeners
+    document.getElementById('nav-tab-game').addEventListener('click', () => navigateToScreen(state.gameStage));
+    document.getElementById('nav-tab-scores').addEventListener('click', () => navigateToScreen('SCORES'));
+    document.getElementById('nav-tab-history').addEventListener('click', () => navigateToScreen('HISTORY'));
+    document.getElementById('nav-tab-wallet').addEventListener('click', () => navigateToScreen('WALLET'));
+    document.getElementById('nav-tab-profile').addEventListener('click', () => navigateToScreen('PROFILE'));
+    document.getElementById('header-close-btn').addEventListener('click', () => navigateToScreen('LOBBY'));
+
+    // Toggle between 1 Cartela (Condition 1: Full-width bottom buttons) and 2 Cartelas (Condition 2: Left-stacked buttons)
+    document.getElementById('btn-toggle-1v2-boards').addEventListener('click', () => {
+      if (state.selectedCartelas.length >= 2) {
+        state.selectedCartelas = [44];
+        showToast('Condition 1 (1 Cartela): Full-width bottom BINGO!, Refresh & Leave buttons.');
+      } else {
+        state.selectedCartelas = [44, 48];
+        showToast('Condition 2 (2+ Cartelas): BINGO!, Refresh & Leave stacked on left; right ScrollView open!');
+      }
+      navigateToScreen('ACTIVE');
+    });
+
+    // Skip 30s pre-game countdown or draw next ball immediately
+    document.getElementById('btn-skip-30s').addEventListener('click', () => {
+      if (state.phase === 'STARTING_COUNTDOWN') {
+        state.preStartCountdown = 0;
+        state.phase = 'IN_PROGRESS';
+        callNextBingoNumber();
+      } else {
+        callNextBingoNumber();
+      }
+    });
+
+    // Reset Pre-Call state helper so user can test 1-board full-width buttons -> Add Board -> 2-board left-stacked buttons
+    document.getElementById('btn-reset-precall').addEventListener('click', () => {
+      state.calledNumbers = [];
+      state.currentCall = null;
+      state.playersCount = 2;
+      state.gameStatus = 'countdown';
+      state.phase = 'STARTING_COUNTDOWN';
+      state.preStartCountdown = 30;
+      state.callIntervalCountdown = 5;
+      state.selectedCartelas = [44];
+      state.pendingCartelaSelection = 48;
+      state.isAppendingFromActiveGame = false;
+      state.markedCells = { 44: ['2-2'], 48: ['2-2'], 199: ['2-2'] };
+      navigateToScreen('ACTIVE');
+      showToast('Reset to 30s Countdown (1 Board)! Click "Add Board" -> select a board -> click "Start Game".');
+    });
+
+    // Top Quick Jump Buttons
+    document.getElementById('jump-lobby').addEventListener('click', () => navigateToScreen('LOBBY'));
+    document.getElementById('jump-cartela').addEventListener('click', () => navigateToScreen('CARTELA'));
+    document.getElementById('jump-active').addEventListener('click', () => navigateToScreen('ACTIVE'));
+    document.getElementById('jump-scores').addEventListener('click', () => navigateToScreen('SCORES'));
+    document.getElementById('jump-wallet').addEventListener('click', () => navigateToScreen('WALLET'));
+    document.getElementById('jump-profile').addEventListener('click', () => navigateToScreen('PROFILE'));
+
+    document.getElementById('btn-cartela-refresh').addEventListener('click', () => {
+      let rand = Math.floor(Math.random() * 200) + 1;
+      while (state.selectedCartelas.includes(rand)) {
+        rand = Math.floor(Math.random() * 200) + 1;
+      }
+      state.pendingCartelaSelection = rand;
+      renderCartelaSelection();
+      showToast(`Previewing Cartela #${rand} — click "Start Game" to append!`);
+    });
+
+    document.getElementById('btn-cartela-start').addEventListener('click', () => {
+      const chosenBoard =
+        state.pendingCartelaSelection ||
+        state.selectedCartelas[state.selectedCartelas.length - 1] ||
+        48;
+
+      if (
+        state.selectedCartelas.length >= 4 &&
+        !state.selectedCartelas.includes(chosenBoard)
+      ) {
+        showToast('Maximum of 4 Cartelas reached!', true);
+        return;
+      }
+
+      if (
+        state.isAppendingFromActiveGame &&
+        state.selectedCartelas.includes(chosenBoard)
+      ) {
+        showToast(`Board #${chosenBoard} is already in your active Cartelas! Pick another number.`, true);
+        return;
+      }
+
+      const isNewBoard = !state.selectedCartelas.includes(chosenBoard);
+      const costToDeduct = isNewBoard ? state.stake : 0;
+      if (costToDeduct > state.mainBalance) {
+        showToast('Insufficient wallet balance for this Cartela.', true);
+        return;
+      }
+
+      // Append the newly selected board to existing active cartelas (max 4, never replacing existing boards)
+      if (isNewBoard && state.selectedCartelas.length < 4) {
+        state.selectedCartelas = [...state.selectedCartelas, chosenBoard];
+      }
+      if (!state.markedCells[chosenBoard]) {
+        state.markedCells[chosenBoard] = ['2-2'];
+      }
+      state.mainBalance = +(state.mainBalance - costToDeduct).toFixed(1);
+
+      // If user came from "Add Board" during an active pre-game countdown, preserve the countdown & return to Active Game
+      if (state.isAppendingFromActiveGame) {
+        state.isAppendingFromActiveGame = false;
+        state.derash = Math.round(
+          state.stake * (state.playersCount + state.selectedCartelas.length - 1) * 0.85
+        );
+        syncWalletLabels();
+        navigateToScreen('ACTIVE');
+        const scrollEl = document.getElementById('active-cartelas-scrollview');
+        if (scrollEl) {
+          setTimeout(() => {
+            scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' });
+          }, 60);
+        }
+        showToast(`✅ Appended Board #${chosenBoard} (${state.selectedCartelas.length}/4) & returned to Active Game!`);
+        return;
+      }
+
+      // Otherwise starting a round from Lobby -> trigger strict 30s countdown if playersCount >= 2
+      state.calledNumbers = [];
+      state.currentCall = null;
+      state.playersCount = Math.max(state.playersCount, 2);
+      state.gameStatus = state.playersCount >= 2 ? 'countdown' : 'waiting';
+      state.phase = state.playersCount >= 2 ? 'STARTING_COUNTDOWN' : 'WAITING_FOR_PLAYERS';
+      state.preStartCountdown = 30;
+      state.callIntervalCountdown = 5;
+      state.derash = Math.round(
+        state.stake * (state.playersCount + state.selectedCartelas.length - 1) * 0.85
+      );
+      syncWalletLabels();
+      navigateToScreen('ACTIVE');
+      showToast(`Players (${state.playersCount}) >= 2! Automatic 30-second countdown started.`);
+    });
+
+    document.getElementById('btn-toggle-sound').addEventListener('click', () => {
+      state.soundOn = !state.soundOn;
+      if (!state.soundOn && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      renderActiveGame();
+    });
+
+    // Attach both Full-Width (1 Cartela) and Left-Stacked (2+ Cartelas) button listeners
+    document.getElementById('btn-active-refresh').addEventListener('click', () => callNextBingoNumber());
+    document.getElementById('btn-active-refresh-left').addEventListener('click', () => callNextBingoNumber());
+
+    document.getElementById('btn-active-leave').addEventListener('click', () => {
+      state.phase = 'ENDED';
+      navigateToScreen('LOBBY');
+    });
+    document.getElementById('btn-active-leave-left').addEventListener('click', () => {
+      state.phase = 'ENDED';
+      navigateToScreen('LOBBY');
+    });
+
+    document.getElementById('btn-active-addboard').addEventListener('click', handleAddBoardAction);
+    document.getElementById('btn-active-addboard-left').addEventListener('click', handleAddBoardAction);
+
+    document.getElementById('btn-claim-bingo').addEventListener('click', handleClaimBingoAction);
+    document.getElementById('btn-claim-bingo-left').addEventListener('click', handleClaimBingoAction);
+
+    // Wallet Deposit & Withdraw Handlers
+    document.getElementById('btn-deposit-submit').addEventListener('click', () => {
+      const amtInput = document.getElementById('input-deposit-amount');
+      const refInput = document.getElementById('input-deposit-ref');
+      const amt = parseFloat(amtInput.value);
+      const ref = refInput.value.trim();
+
+      if (isNaN(amt) || amt < 50 || amt > 1000) {
+        showToast('Deposit must be between 50 ETB and 1000 ETB.', true);
+        return;
+      }
+      if (ref.length < 4) {
+        showToast('Please enter a valid Phone Number or Transaction ID.', true);
+        return;
+      }
+      state.mainBalance = +(state.mainBalance + amt).toFixed(1);
+      state.history.unshift({
+        id: `DEP-${Date.now().toString().slice(-3)}`,
+        type: 'DEPOSIT',
+        amount: amt,
+        ref: `Ref: ${ref}`,
+        date: 'Just now'
+      });
+      amtInput.value = '';
+      refInput.value = '';
+      syncWalletLabels();
+      showToast(`✅ Deposit of ${amt.toFixed(1)} ETB verified and added!`);
+    });
+
+    document.getElementById('btn-withdraw-submit').addEventListener('click', () => {
+      const amtInput = document.getElementById('input-withdraw-amount');
+      const phoneInput = document.getElementById('input-withdraw-phone');
+      const amt = parseFloat(amtInput.value);
+      const phone = phoneInput.value.trim();
+
+      if (isNaN(amt) || amt < 50 || amt > state.mainBalance) {
+        showToast('Enter a valid withdrawal amount (Min 50 ETB, up to Main Balance).', true);
+        return;
+      }
+      if (!/^09\d{8}$/.test(phone)) {
+        showToast('Phone number must be 10 digits starting with 09 (e.g., 0911223344).', true);
+        return;
+      }
+      state.mainBalance = +(state.mainBalance - amt).toFixed(1);
+      state.history.unshift({
+        id: `WD-${Date.now().toString().slice(-3)}`,
+        type: 'WITHDRAW',
+        amount: amt,
+        ref: `To: ${phone}`,
+        date: 'Just now'
+      });
+      amtInput.value = '';
+      phoneInput.value = '';
+      syncWalletLabels();
+      showToast(`✅ Withdrawal of ${amt.toFixed(1)} ETB to ${phone} processed!`);
+    });
+
+    // =========================================================================
+    // 6. EMBEDDED SOURCE CODE VIEWER (Updated ActiveGameScreen & CartelaCard)
+    // =========================================================================
+    const SOURCE_FILES = {
+      'ActiveGameScreen.tsx': {
+        path: 'mobile/src/screens/ActiveGameScreen.tsx',
+        code: `import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+} from 'react-native';
+import * as Speech from 'expo-speech';
+import { COLORS, SHADOWS } from '@src/theme/colors';
+import { useBingoStore } from '@src/store/useBingoStore';
+import {
+  getCartelaById,
+  getBingoCallLabel,
+  getBingoBallColor,
+} from '@src/utils/cartelaGenerator';
+import { CartelaCard, BINGO_HEADERS } from '@src/components/CartelaCard';
+
+const CARTELA_CARD_GAP = 12;
+
+export function ActiveGameScreen() {
+  const {
+    activeGame,
+    toggleCellMark,
+    leaveGameToLobby,
+    addBoardInActiveGame,
+    toggleSound,
+    claimBingo,
+    startPreGameCountdown,
+    tickPreGameCountdown,
+    officiallyStartGame,
+    drawNextBingoNumber,
+  } = useBingoStore();
+
+  const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+
+  // Updated Add Board handler: Navigates user to CartelaSelect screen in APPEND mode
+  const handleAddBoardPress = () => {
+    const check = openCartelaSelectForAddBoard();
+    if (!check.ok) {
+      setBannerMessage(check.error || 'Cannot add another board.');
+      return;
+    }
+    navigation.navigate('CartelaSelect', { mode: 'APPEND_BOARD' });
+  };
+
+  const hasGameStarted =
+    activeGame.phase === 'IN_PROGRESS' ||
+    activeGame.calledNumbers.length > 0 ||
+    activeGame.currentCall !== null;
+
+  // Condition for Dynamic Bottom Buttons Layout:
+  // false -> Condition 1 (Only 1 Cartela): Full-width bottom BINGO!, Refresh, Leave layout
+  // true  -> Condition 2 (2 or more Cartelas): Shrink Refresh & Leave to match left-aligned BINGO!
+  //          and stack them under the left 1-75 caller board so the right side is 100% free!
+  const hasMultipleCartelas = activeGame.selectedCartelas.length >= 2;
+
+  // Slice the previous 4 numbers called prior to the newest currentCall
+  const previousFourCalls = activeGame.calledNumbers.slice(-5, -1);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Top 7-Pill Bar */}
+      <View style={styles.topBar}>{/* GAME, DERASH, BONUS, PLAYERS, STAKE, CALL, SOUND */}</View>
+
+      <View style={styles.mainSplitArea}>
+        {/* LEFT COLUMN: 1-75 Master Caller Board + (Condition 2: Left-Stacked BINGO, Refresh, Leave) */}
+        <View style={styles.leftColumn}>
+          <View style={styles.callerPanel}>
+            {Array.from({ length: 15 }, (_, rowIdx) => (
+              <View key={rowIdx} style={styles.callerRow}>
+                {[0, 1, 2, 3, 4].map((colIdx) => {
+                  const number = colIdx * 15 + rowIdx + 1;
+
+                  // 1. Master Board Color Coding (Orange vs. Green)
+                  const cellBackgroundColor =
+                    number === activeGame.currentCall
+                      ? COLORS.callerCellCurrentGreen // Most recently called number in GREEN (#16A34A)
+                      : activeGame.calledNumbers.includes(number)
+                      ? COLORS.callerCellActive // Past called numbers in ORANGE (#F97316)
+                      : COLORS.callerCellBg; // Default uncalled green
+
+                  return (
+                    <View
+                      key={number}
+                      style={[
+                        styles.callerCell,
+                        { backgroundColor: cellBackgroundColor },
+                        number === activeGame.currentCall && styles.callerCellCurrentBorder,
+                      ]}
+                    >
+                      <Text style={styles.callerCellText}>{number}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+
+          {/* 2. CONDITION 2 (2 or more Cartelas):
+                 BINGO!, Refresh, and Leave stacked neatly under the left caller board */}
+          {hasMultipleCartelas && (
+            <View style={styles.leftStackedControls}>
+              <TouchableOpacity
+                style={styles.bingoButtonLeft}
+                onPress={() => claimBingo()}
+              >
+                <Text style={styles.bingoButtonLeftText}>BINGO!</Text>
+              </TouchableOpacity>
+
+              <View style={styles.leftSubButtonsStack}>
+                <View style={styles.leftCompactRow}>
+                  <TouchableOpacity
+                    style={[styles.leftCompactBtn, { backgroundColor: COLORS.blueRefresh }]}
+                    onPress={() => drawNextBingoNumber()}
+                  >
+                    <Text style={styles.leftCompactBtnText}>Refresh</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.leftCompactBtn, { backgroundColor: COLORS.orangeLeave }]}
+                    onPress={leaveGameToLobby}
+                  >
+                    <Text style={styles.leftCompactBtnText}>Leave</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {!hasGameStarted && (
+                  <TouchableOpacity
+                    style={[styles.leftAddBoardBtn, { backgroundColor: COLORS.gold }]}
+                    onPress={handleAddBoardPress}
+                  >
+                    <Text style={[styles.leftCompactBtnText, { color: COLORS.textDark }]}>
+                      Add Board ({activeGame.selectedCartelas.length}/4)
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* RIGHT COLUMN: Countdown + Current Call (w/ Last 4 History) + Full-Height Cartela ScrollView */}
+        <View style={styles.rightColumn}>
+          {/* Countdown & Current Call + Last 4 History */}
+          {/* Dedicated Right-Side ScrollView stretching all the way to the bottom when >=2 Cartelas */}
+          <ScrollView
+            style={styles.cartelasScrollView}
+            contentContainerStyle={styles.cartelasScrollContent}
+            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
+          >
+            {activeGame.selectedCartelas.map((boardNum, idx) => (
+              <CartelaCard
+                key={boardNum}
+                board={getCartelaById(boardNum)}
+                calledNumbers={activeGame.calledNumbers}
+                markedCells={activeGame.markedCells[boardNum] || ['2-2']}
+                onToggleCell={toggleCellMark}
+                style={
+                  idx < activeGame.selectedCartelas.length - 1
+                    ? { marginBottom: CARTELA_CARD_GAP }
+                    : undefined
+                }
+              />
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+
+      {/* 2. CONDITION 1 (Only 1 Cartela):
+             Keep original, larger, full-width bottom layout for BINGO!, Refresh, and Leave */}
+      {!hasMultipleCartelas && (
+        <View style={styles.singleBoardBottomWrapper}>
+          <TouchableOpacity
+            style={styles.bingoButtonFullWidth}
+            onPress={() => claimBingo()}
+          >
+            <Text style={styles.bingoButtonFullWidthText}>BINGO!</Text>
+          </TouchableOpacity>
+
+          <View style={styles.bottomActionsRow}>
+            <TouchableOpacity
+              style={[styles.bottomActionBtn, { backgroundColor: COLORS.blueRefresh }]}
+              onPress={() => drawNextBingoNumber()}
+            >
+              <Text style={styles.bottomActionText}>Refresh</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.bottomActionBtn, { backgroundColor: COLORS.orangeLeave }]}
+              onPress={leaveGameToLobby}
+            >
+              <Text style={styles.bottomActionText}>Leave</Text>
+            </TouchableOpacity>
+
+            {!hasGameStarted && (
+              <TouchableOpacity
+                style={[styles.bottomActionBtn, { backgroundColor: COLORS.gold }]}
+                onPress={handleAddBoardPress}
+              >
+                <Text style={[styles.bottomActionText, { color: COLORS.textDark }]}>
+                  Add Board
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
+    </SafeAreaView>
+  );
+}`
+      },
+      'CartelaCard.tsx': {
+        path: 'mobile/src/components/CartelaCard.tsx',
+        code: `import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { COLORS, SHADOWS } from '@src/theme/colors';
+import { CartelaBoard } from '@src/types/bingo';
+
+export const BINGO_HEADERS = [
+  { letter: 'B', color: COLORS.bingoB },
+  { letter: 'I', color: COLORS.bingoI },
+  { letter: 'N', color: COLORS.bingoN },
+  { letter: 'G', color: COLORS.bingoG },
+  { letter: 'O', color: COLORS.bingoO },
+];
+
+export const CARTELA_CARD_HEIGHT = 268;
+
+export function CartelaCard({
+  board,
+  calledNumbers,
+  markedCells,
+  onToggleCell,
+  style,
+}: {
+  board: CartelaBoard;
+  calledNumbers: number[];
+  markedCells: string[];
+  onToggleCell: (boardNumber: number, row: number, col: number) => void;
+  style?: object;
+}) {
+  return (
+    <View style={[styles.cardContainer, style]}>
+      {/* 1. Distinct Top Header Row: B, I, N, G, O circles centered over their 5 columns */}
+      <View style={styles.bingoHeaderRow}>
+        {BINGO_HEADERS.map((h) => (
+          <View key={h.letter} style={styles.columnHeaderSlot}>
+            <View style={[styles.bingoCircle, { backgroundColor: h.color }]}>
+              <Text style={styles.bingoCircleText}>{h.letter}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+
+      {/* 2. Full-Size 5x5 Number Grid */}
+      <View style={styles.gridWrapper}>
+        {board.grid.map((row, rIdx) => (
+          <View key={rIdx} style={styles.gridRow}>
+            {row.map((cell, cIdx) => {
+              const isFree = cell === 'FREE';
+              const key = \`\${rIdx}-\${cIdx}\`;
+              const isMarked = markedCells.includes(key);
+              const isCalled =
+                typeof cell === 'number' && calledNumbers.includes(cell);
+
+              return (
+                <View key={cIdx} style={styles.cellColumnSlot}>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={[
+                      styles.cellButton,
+                      isCalled && styles.cellCalledHint,
+                      isMarked && styles.cellMarked,
+                      isFree && styles.cellFree,
+                    ]}
+                    onPress={() => onToggleCell(board.boardNumber, rIdx, cIdx)}
+                  >
+                    {isFree ? (
+                      <View style={styles.freeStarCircle}>
+                        <Text style={styles.freeStarText}>★</Text>
+                      </View>
+                    ) : (
+                      <Text
+                        style={[
+                          styles.cellText,
+                          isMarked && styles.cellTextMarked,
+                        ]}
+                      >
+                        {cell}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </View>
+        ))}
+      </View>
+
+      {/* 3. Bottom Footer: Board #ID centered below the 5x5 number grid */}
+      <View style={styles.footerRow}>
+        <Text style={styles.boardIdFooterText}>Board #{board.boardNumber}</Text>
+      </View>
+    </View>
+  );
+}`
+      },
+      'useBingoStore.ts': {
+        path: 'mobile/src/store/useBingoStore.ts',
+        code: `// Zustand Store: Append Board on "Start" Click + Strict 30s Countdown when playersCount >= 2
+openCartelaSelectForAddBoard: () => {
+  const { activeGame, wallet } = get();
+  if (
+    activeGame.gameStatus === 'playing' ||
+    activeGame.phase === 'IN_PROGRESS' ||
+    activeGame.calledNumbers.length > 0
+  ) {
+    return { ok: false, error: 'Game is already playing! Cannot add boards now.' };
+  }
+  if (activeGame.selectedCartelas.length >= 4) {
+    return { ok: false, error: 'Maximum limit of 4 Cartelas reached!' };
+  }
+  if (activeGame.stake > wallet.mainBalance) {
+    return { ok: false, error: 'Insufficient wallet balance to add another board.' };
+  }
+  const defaultCandidate =
+    [48, 199, 12, 77, 105].find(
+      (id) => !activeGame.selectedCartelas.includes(id)
+    ) || 48;
+
+  set((state) => ({
+    activeGame: {
+      ...state.activeGame,
+      isAppendingFromActiveGame: true,
+      pendingCartelaSelection: defaultCandidate,
+    },
+  }));
+  return { ok: true };
+},
+
+setPendingCartela: (boardNumber: number) =>
+  set((state) => ({
+    activeGame: {
+      ...state.activeGame,
+      pendingCartelaSelection: boardNumber,
+    },
+  })),
+
+submitCartelaStart: (boardNumberToCommit?: number) => {
+  const { activeGame, wallet } = get();
+  const chosenBoard =
+    boardNumberToCommit ?? activeGame.pendingCartelaSelection ?? 48;
+  const currentBoards = activeGame.selectedCartelas;
+
+  if (currentBoards.length >= 4 && !currentBoards.includes(chosenBoard)) {
+    return { ok: false, error: 'Maximum of 4 Cartelas reached!', wasAppended: false };
+  }
+  if (activeGame.isAppendingFromActiveGame && currentBoards.includes(chosenBoard)) {
+    return {
+      ok: false,
+      error: 'Board is already in your active Cartelas. Select a different number!',
+      wasAppended: false,
+    };
+  }
+
+  const isNewBoard = !currentBoards.includes(chosenBoard);
+  const stakeToDeduct = isNewBoard ? activeGame.stake : 0;
+  if (stakeToDeduct > wallet.mainBalance) {
+    return { ok: false, error: 'Insufficient wallet balance.', wasAppended: false };
+  }
+
+  // Append newly selected board to active cartelas list (capped at 4 boards)
+  const nextSelectedCartelas = isNewBoard
+    ? [...currentBoards, chosenBoard].slice(0, 4)
+    : currentBoards;
+
+  const wasAppended = Boolean(activeGame.isAppendingFromActiveGame);
+
+  set((state) => ({
+    wallet: {
+      ...state.wallet,
+      mainBalance: +(state.wallet.mainBalance - stakeToDeduct).toFixed(1),
+    },
+    activeGame: {
+      ...state.activeGame,
+      selectedCartelas: nextSelectedCartelas,
+      markedCells: {
+        ...state.activeGame.markedCells,
+        [chosenBoard]: state.activeGame.markedCells[chosenBoard] || ['2-2'],
+      },
+      isAppendingFromActiveGame: false,
+    },
+  }));
+
+  return { ok: true, wasAppended };
+},`
+      },
+      'WalletAndProfile.tsx': {
+        path: 'mobile/src/screens/WalletScreen.tsx & LeaderboardScreen.tsx',
+        code: `export function validateDeposit(amount: number, txOrPhone: string) {
+  if (Number.isNaN(amount) || amount < 50 || amount > 1000) {
+    return { ok: false, error: 'Minimum deposit is 50 ETB, and maximum deposit is 1000 ETB.' };
+  }
+  if (!txOrPhone || txOrPhone.trim().length < 5) {
+    return { ok: false, error: 'Enter a valid Phone Number or Transaction ID.' };
+  }
+  return { ok: true };
+}`
+      },
+      'BottomTabNavigator.tsx': {
+        path: 'mobile/src/navigation/BottomTabNavigator.tsx',
+        code: `import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+const Tab = createBottomTabNavigator();
+export function BottomTabNavigator() { return null; }`
+      },
+      'LobbyScreen.tsx': {
+        path: 'mobile/src/screens/LobbyScreen.tsx',
+        code: `import React from 'react';
+import { SafeAreaView } from 'react-native';
+export function LobbyScreen() { return <SafeAreaView />; }`
+      },
+      'CartelaSelectScreen.tsx': {
+        path: 'mobile/src/screens/CartelaSelectScreen.tsx',
+        code: `import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useBingoStore } from '@src/store/useBingoStore';
+
+export function CartelaSelectScreen() {
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const { activeGame, setPendingCartela, submitCartelaStart } = useBingoStore();
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
+
+  const candidateBoardNumber =
+    activeGame.pendingCartelaSelection ||
+    activeGame.selectedCartelas[activeGame.selectedCartelas.length - 1] ||
+    48;
+
+  // Step 1: Select/preview a board number (1-200)
+  const handleSelectBoardNumber = (boardNumber: number) => {
+    setErrorBanner(null);
+    setPendingCartela(boardNumber);
+  };
+
+  // Step 2: Click "Start Game" ("Start") -> appends board (max 4) & navigates back to ActiveGame
+  const handleStartButtonPress = () => {
+    const result = submitCartelaStart(candidateBoardNumber);
+    if (!result.ok) {
+      setErrorBanner(result.error || 'Unable to append Cartela board.');
+      return;
+    }
+    setErrorBanner(null);
+    navigation.navigate('ActiveGame');
+  };
+
+  return <SafeAreaView />;
+}`
+      },
+      'server.ts': {
+        path: 'backend/src/server.ts',
+        code: `import express from 'express';
+import http from 'http';
+import { Server } from 'socket.io';
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });`
+      }
+    };
+
+    function selectCodeTab(fileKey) {
+      const entry = SOURCE_FILES[fileKey];
+      if (!entry) return;
+      document.getElementById('current-file-label').textContent = entry.path;
+      document.getElementById('code-display-block').textContent = entry.code;
+
+      document.querySelectorAll('.code-tab-btn').forEach((btn) => {
+        if (btn.getAttribute('data-file') === fileKey) {
+          btn.className = 'code-tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 text-white';
+        } else {
+          btn.className = 'code-tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700';
+        }
+      });
+    }
+
+    document.querySelectorAll('.code-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selectCodeTab(btn.getAttribute('data-file'));
+      });
+    });
+
+    document.getElementById('btn-copy-code').addEventListener('click', () => {
+      const codeText = document.getElementById('code-display-block').textContent;
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = codeText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Copied file code to clipboard!');
+      } catch (e) {}
+    });
+
+    document.getElementById('toggle-code-drawer').addEventListener('click', () => {
+      const panel = document.getElementById('code-inspector-panel');
+      panel.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Initial boot: Open on Active Game screen
+    navigateToScreen('ACTIVE');
+    selectCodeTab('ActiveGameScreen.tsx');
+  </script>
+</body>
+</html>
